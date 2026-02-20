@@ -3,6 +3,7 @@ import type { DragEvent } from 'react'
 import {
   ReactFlow,
   Background,
+  Controls,
   type Node,
   type Edge,
   type Connection,
@@ -549,6 +550,8 @@ export default function Playground() {
             className="bg-background [&_.react-flow__pane]:bg-transparent"
           >
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
+            <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <CollabCursors />
           </ReactFlow>
         </div>
 
