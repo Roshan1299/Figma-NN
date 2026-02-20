@@ -6,6 +6,7 @@ import Models from './routes/Models'
 import ModelPage from './routes/Model'
 import Test from './routes/Test'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { CollabPresence } from './components/CollabPresence'
 
 const queryClient = new QueryClient()
 
@@ -41,6 +42,9 @@ export default function App() {
                   Test
                 </NavLink>
                 </nav>
+              <div className="flex items-center justify-end">
+                <CollabPresence />
+              </div>
             </div>
           </header>
 
