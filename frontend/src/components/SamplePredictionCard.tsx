@@ -4,7 +4,7 @@ import type { EmnistSample } from '@/api/types'
 
 interface SamplePredictionCardProps {
   sample: EmnistSample
-  datasetType?: 'mnist' | 'emnist'
+  datasetType?: 'mnist' | 'emnist' | 'audio' | 'text'
 }
 
 const renderSampleGrid = (grid: number[][]) => (

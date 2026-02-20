@@ -90,9 +90,15 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
         className="fixed bottom-4 right-4 transition-transform transform hover:-translate-y-2 flex items-center gap-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-3 shadow-lg cursor-pointer"
       >
         <div className="flex items-center justify-center p-1">
-          <img src="/favicon.svg" alt="Stitchy Kiwi" className="w-6 h-6" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
         </div>
-        <span className="text-sm font-semibold tracking-wide uppercase">Ask Stitchy</span>
+        <span className="text-sm font-semibold tracking-wide uppercase">Ask Figgy</span>
       </button>
     )
   }
@@ -105,8 +111,16 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
         className="flex items-center justify-between w-full p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <img src="/kiwi.svg" alt="Chatbot Icon" className="w-6 h-6" />
-          <h3 className="font-semibold text-gray-900">Stitchy</h3>
+          <div className="w-6 h-6 rounded bg-primary flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </div>
+          <h3 className="font-semibold text-gray-900">Figgy</h3>
         </div>
         <div className="flex items-center gap-2">
           {messages.length > 0 && (
@@ -154,7 +168,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
         {messages.length === 0 && (
           <div className="text-center text-gray-500 text-sm mt-8">
             <p className="text-lg font-semibold text-gray-700">
-              Welcome to Stitch, your Interactive Neural Network Builder!
+              Welcome to FigmaNN, your Interactive Neural Network Builder!
             </p>
             <p className="mt-3 text-gray-600">
               This is an interactive tool for designing and visualizing neural network architectures.
@@ -285,7 +299,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask Stitchy..."
+            placeholder="Ask Figgy..."
             disabled={isStreaming}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
           />

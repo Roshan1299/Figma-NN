@@ -3,7 +3,6 @@ import type { DragEvent } from 'react'
 import {
   ReactFlow,
   Background,
-  Controls,
   type Node,
   type Edge,
   type Connection,
@@ -24,7 +23,9 @@ import { HyperparamsPanel, type Hyperparams, DEFAULT_HYPERPARAMS } from '@/compo
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { TrainingMetricsSlideOver } from '@/components/TrainingMetricsSlideOver'
 import { useTrainingMetrics } from '@/hooks/useTraining'
-import { LayersPanel } from '@/components/LayersPanel'
+import { LeftSidebar } from '@/components/LeftSidebar'
+import { RightInspector } from '@/components/RightInspector'
+import { BottomDrawer } from '@/components/BottomDrawer'
 import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
 import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
@@ -75,8 +76,6 @@ export default function Playground() {
   const { layers, edges, addLayer, addEdge, removeEdge, updateLayerPosition, removeLayer, applyProposedSchema, loadGraph } = useGraphStore()
   const [hyperparams, setHyperparams] = useState<Hyperparams>(DEFAULT_HYPERPARAMS)
   const [metricsSlideOverOpen, setMetricsSlideOverOpen] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentPreset, setCurrentPreset] = useState<PresetType>('blank')
   const [showProposalPreview, setShowProposalPreview] = useState(false)
   const {
     metrics,
@@ -392,7 +391,6 @@ export default function Playground() {
   const handlePresetSelect = useCallback((preset: PresetType) => {
     const presetGraph = getPresetGraph(preset)
     loadGraph(presetGraph.layers, presetGraph.edges)
-    setCurrentPreset(preset)
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
     }
@@ -461,21 +459,23 @@ export default function Playground() {
   }, [clearProposedSchema, addMessage])
 
   return (
-    <>
-      <div style={{ width: '100vw', height: 'calc(100vh - 4rem)', position: 'relative' }}>
+    <div className="flex-1 flex w-full h-full overflow-hidden bg-background">
+      <LeftSidebar />
+
+      {/* Center Workspace */}
+      <div className="flex-1 relative flex flex-col min-w-0">
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-4 pointer-events-none">
-          <div className="flex flex-row gap-4 items-start">
+          <div className="flex flex-row gap-4 items-start pointer-events-auto">
             <HyperparamsPanel onParamsChange={setHyperparams} />
             <PresetChips onPresetSelect={handlePresetSelect} />
           </div>
-          <LayersPanel />
         </div>
 
-        <div className="absolute top-4 right-4 z-10 flex flex-row gap-4">
+        <div className="absolute top-4 right-4 z-10 flex flex-row gap-4 pointer-events-auto">
           {(metrics.length > 0 || currentState !== null) && (
             <button
               onClick={() => setMetricsSlideOverOpen(true)}
-              className="z-10 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-lg transition-colors flex items-center gap-2 cursor-pointer"
+              className="z-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2.5 rounded-lg shadow-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -494,11 +494,11 @@ export default function Playground() {
             disabled={canCancelTraining ? isCancelling : isTraining}
             className={`${canCancelTraining
               ? isCancelling
-                ? 'bg-red-300 cursor-wait'
-                : 'bg-red-500 hover:bg-red-600 cursor-pointer'
+                ? 'bg-destructive/60 cursor-wait'
+                : 'bg-destructive hover:bg-destructive/90 cursor-pointer'
               : isTraining
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 cursor-pointer'
+                ? 'bg-muted cursor-not-allowed text-muted-foreground'
+                : 'bg-primary hover:bg-primary/90 cursor-pointer'
               } text-white font-semibold px-6 py-2.5 rounded-lg shadow-lg transition-colors flex items-center gap-2`}
           >
             {canCancelTraining ? (
@@ -535,7 +535,7 @@ export default function Playground() {
 
         </div>
 
-        <div className="h-full w-full" ref={reactFlowWrapper}>
+        <div className="flex-1 w-full" ref={reactFlowWrapper}>
           <ReactFlow
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
@@ -551,14 +551,18 @@ export default function Playground() {
             fitView
             snapToGrid
             snapGrid={[15, 15]}
-            defaultEdgeOptions={{ animated: true }}
+            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.48 0.25 285)', strokeWidth: 2, strokeDasharray: '4 4' } }}
             onInit={setReactFlowInstance}
+            className="bg-background [&_.react-flow__pane]:bg-transparent"
           >
-            <Background />
-            <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
           </ReactFlow>
         </div>
+
+        <BottomDrawer />
       </div>
+
+      <RightInspector selectedNodeId={selectedNodeIds.length === 1 ? selectedNodeIds[0] : null} />
 
       <TrainingMetricsSlideOver
         open={metricsSlideOverOpen}
@@ -568,7 +572,7 @@ export default function Playground() {
         currentState={currentState}
         runId={runId}
         samplePredictions={samplePredictions}
-        datasetType={lastRunHyperparams?.dataset_type}
+        datasetType={lastRunHyperparams?.dataset_type as 'mnist' | 'emnist' | 'audio' | 'text' | undefined}
         onCancel={() => {
           void cancelActiveTraining()
         }}
@@ -596,6 +600,6 @@ export default function Playground() {
           onReject={handleRejectProposal}
         />
       )}
-    </>
+    </div>
   )
 }

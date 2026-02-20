@@ -48,7 +48,7 @@ export interface TrainingRequest {
     seed: number
     train_split: number
     shuffle: boolean
-    dataset_type?: 'mnist' | 'emnist'
+    dataset_type?: 'mnist' | 'emnist' | 'audio' | 'text'
   }
 }
 

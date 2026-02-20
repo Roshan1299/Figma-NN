@@ -22,7 +22,7 @@ interface TrainingMetricsSlideOverProps {
   currentState: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled' | null
   runId?: string
   samplePredictions?: EmnistSample[]
-  datasetType?: 'mnist' | 'emnist'
+  datasetType?: 'mnist' | 'emnist' | 'audio' | 'text'
   onCancel?: () => void
   canCancel?: boolean
   isCancelling?: boolean
@@ -77,7 +77,6 @@ export const TrainingMetricsSlideOver: FC<TrainingMetricsSlideOverProps> = ({
   }, [metrics, metrics.length])
 
   const latestMetric = throttledMetrics.length > 0 ? throttledMetrics[throttledMetrics.length - 1] : null
-  const previousMetric = throttledMetrics.length > 1 ? throttledMetrics[throttledMetrics.length - 2] : null
 
   // Calculate trends
   const trends = useMemo(() => {

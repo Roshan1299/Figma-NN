@@ -35,7 +35,7 @@ export interface InputLayer extends Layer {
     channels?: number;
     height?: number;
     width?: number;
-    dataset?: 'mnist' | 'emnist';
+    dataset?: 'mnist' | 'emnist' | 'audio' | 'text';
   };
 }
 
