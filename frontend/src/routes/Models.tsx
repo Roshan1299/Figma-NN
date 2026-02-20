@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { HyperparamsTable } from '@/components/HyperparamsTable';
 import { useModels, type StoredLayer } from '@/hooks/useModels';
 import { Link } from 'react-router-dom';
 

@@ -1,138 +1,34 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { useGraphStore } from '../../store/graphStore'
 import type { ConvLayer } from '../../types/graph'
-import { formatShape, calculateParams } from '../../types/graph'
 
-const activationColors: Record<string, string> = {
-  relu: 'bg-indigo-100 text-indigo-700 border-indigo-300',
-  sigmoid: 'bg-purple-100 text-purple-700 border-purple-300',
-  tanh: 'bg-green-100 text-green-700 border-green-300',
-  none: 'bg-gray-100 text-gray-700 border-gray-300',
-}
-
-const paddingOptions = ['valid', 'same'] as const
-
-export function ConvLayerNode({ id }: NodeProps) {
+export function ConvLayerNode({ id, selected }: NodeProps) {
   const layer = useGraphStore((state) => state.layers[id]) as ConvLayer | undefined
-  const inputShape = useGraphStore((state) => state.getInputShape(id))
-  const updateLayerParams = useGraphStore((state) => state.updateLayerParams)
   const removeLayer = useGraphStore((state) => state.removeLayer)
 
   if (!layer) return null
 
-  const paramCount = calculateParams(layer, inputShape)
-
   return (
-    <div className="relative bg-indigo-50 border-2 border-indigo-500 rounded-lg shadow-lg min-w-[180px]">
+    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
+      <div className="w-8 h-8 rounded bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+      </div>
+      
+      <div className="flex flex-col">
+        <span className="text-[13px] font-semibold text-foreground leading-tight">Conv2D</span>
+        <span className="text-[11px] text-muted-foreground mt-0.5 leading-none">{layer.params.filters} filters, {layer.params.kernel}x{layer.params.kernel}</span>
+      </div>
+
       <button
         type="button"
         onClick={() => removeLayer(id)}
-        className="absolute -right-2 -top-2 w-6 h-6 flex items-center justify-center rounded-full bg-indigo-500 text-white text-xs font-bold shadow-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-        aria-label="Remove convolution layer"
+        className="absolute -right-2 -top-2 w-5 h-5 flex items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground text-[10px] font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
       >
         ×
       </button>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="input"
-        className="bg-indigo-500! size-5! border-2! border-white!"
-      />
-
-      <div className="bg-indigo-500 text-white px-3 py-1.5 rounded-t-md text-sm font-semibold">
-        Convolution Layer
-      </div>
-
-      <div className="p-3 space-y-3">
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Filters:</label>
-          <input
-            type="number"
-            value={layer.params.filters}
-            onChange={(e) =>
-              updateLayerParams(id, { filters: Math.max(1, parseInt(e.target.value) || 1) })
-            }
-            min={1}
-            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Kernel:</label>
-          <input
-            type="number"
-            value={layer.params.kernel}
-            onChange={(e) =>
-              updateLayerParams(id, { kernel: Math.max(1, parseInt(e.target.value) || 1) })
-            }
-            min={1}
-            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <span className="text-xs text-gray-500">× {layer.params.kernel}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Stride:</label>
-          <input
-            type="number"
-            value={layer.params.stride}
-            onChange={(e) =>
-              updateLayerParams(id, { stride: Math.max(1, parseInt(e.target.value) || 1) })
-            }
-            min={1}
-            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Padding:</label>
-          <select
-            value={layer.params.padding}
-            onChange={(e) => updateLayerParams(id, { padding: e.target.value as 'valid' | 'same' })}
-            className="px-2 py-1 text-xs rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {paddingOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Activation:</label>
-          <select
-            value={layer.params.activation}
-            onChange={(e) => updateLayerParams(id, { activation: e.target.value })}
-            className={`px-2 py-1 text-xs rounded border ${activationColors[layer.params.activation] ?? activationColors.none
-              } font-medium`}
-          >
-            <option value="relu">ReLU</option>
-            <option value="sigmoid">Sigmoid</option>
-            <option value="tanh">Tanh</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-
-        <div className="text-xs text-gray-600">
-          <span className="font-medium">Input:</span> {formatShape(inputShape)}
-        </div>
-        <div className="text-xs text-gray-600">
-          <span className="font-medium">Shape:</span> {formatShape(layer.shapeOut)}
-        </div>
-        {paramCount > 0 && (
-          <div className="text-xs text-gray-600">
-            <span className="font-medium">Params:</span> {paramCount.toLocaleString()}
-          </div>
-        )}
-      </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        className="bg-indigo-500! size-5! border-2! border-white!"
-      />
+      
+      <Handle type="target" position={Position.Top} id="input" className="w-2.5 h-2.5 bg-primary border-background border-2 top-[-5px]" />
+      <Handle type="source" position={Position.Bottom} id="output" className="w-2.5 h-2.5 bg-primary border-background border-2 bottom-[-5px]" />
     </div>
   )
 }

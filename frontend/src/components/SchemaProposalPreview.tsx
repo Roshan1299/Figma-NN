@@ -16,7 +16,7 @@ import { formatShape } from '@/types/graph'
 
 type ChangeType = 'added' | 'removed' | 'modified' | 'unchanged'
 
-interface SchemaProposalNodeData {
+interface SchemaProposalNodeData extends Record<string, unknown> {
   layer: AnyLayer
   changeType: ChangeType
 }

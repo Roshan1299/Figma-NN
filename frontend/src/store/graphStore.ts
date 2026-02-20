@@ -102,7 +102,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   addLayer: (layer) => {
     set((state) => ({
-      layers: { ...state.layers, [layer.id]: layer } as Record<string, AnyLayer>
+      layers: { ...state.layers, [layer.id]: layer }
     }))
     get().recomputeShapes()
   },
@@ -233,11 +233,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   applyProposedSchema: (schema) => {
     get().clearGraph()
     Object.values(schema.layers).forEach((layer) => {
+      const newId = layer.id // Assuming layer.id is already present in schema.layers
       get().addLayer({
         ...layer,
+        id: newId,
         params: { ...layer.params },
         position: layer.position ? { ...layer.position } : undefined,
-      })
+      } as AnyLayer)
     })
     schema.edges.forEach((edge) => {
       get().addEdge({
@@ -274,7 +276,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     })
 
     normalizedLayers.forEach((layer) => {
-      get().addLayer(layer)
+      get().addLayer(layer as AnyLayer)
     })
 
     normalizedEdges.forEach((edge) => {

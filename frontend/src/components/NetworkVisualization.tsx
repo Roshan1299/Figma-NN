@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   Panel,
   type Node,
   type Edge,
@@ -413,7 +412,7 @@ function InputNeuronNode(props: NodeProps) {
   )
 }
 
-function ConvNeuronNode(props: NodeProps) {
+function ConvNeuronNode(_props: NodeProps) {
   return (
     <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-indigo-400 bg-white shadow-sm">
       <Handle

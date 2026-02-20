@@ -1,69 +1,34 @@
-import type { ChangeEvent } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { useGraphStore } from '@/store/graphStore'
 import type { DropoutLayer } from '@/types/graph'
-import { formatShape } from '@/types/graph'
 
-export function DropoutLayerNode({ id }: NodeProps) {
+export function DropoutLayerNode({ id, selected }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as DropoutLayer | undefined
-  const inputShape = useGraphStore(state => state.getInputShape(id))
-  const updateLayerParams = useGraphStore(state => state.updateLayerParams)
   const removeLayer = useGraphStore(state => state.removeLayer)
 
   if (!layer) return null
 
-  const handleRateChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = Math.min(1, Math.max(0, parseFloat(event.target.value) || 0))
-    updateLayerParams(id, { rate: Number.isNaN(value) ? 0 : value })
-  }
-
   return (
-    <div className="relative bg-orange-50 border-2 border-orange-500 rounded-lg shadow-lg min-w-[180px]">
+    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
+      <div className="w-8 h-8 rounded bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+      </div>
+
+      <div className="flex flex-col">
+        <span className="text-[13px] font-semibold text-foreground leading-tight">Dropout</span>
+        <span className="text-[11px] text-muted-foreground mt-0.5 leading-none">Rate: {(layer.params.rate * 100).toFixed(0)}%</span>
+      </div>
+
       <button
         type="button"
         onClick={() => removeLayer(id)}
-        className="absolute -right-2 -top-2 w-6 h-6 flex items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
-        aria-label="Remove dropout layer"
+        className="absolute -right-2 -top-2 w-5 h-5 flex items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground text-[10px] font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
       >
         ×
       </button>
 
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="input"
-        className="bg-indigo-500! size-5! border-2! border-white!"
-      />
-
-      <div className="bg-orange-500 text-white px-3 py-1.5 rounded-t-md text-sm font-semibold">
-        Dropout
-      </div>
-
-      <div className="p-3 space-y-3">
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Rate:</label>
-          <input
-            type="number"
-            min={0}
-            max={1}
-            step={0.05}
-            value={layer.params.rate.toFixed(2)}
-            onChange={handleRateChange}
-            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-        </div>
-
-        <div className="text-xs text-gray-600">
-          <span className="font-medium">Shape:</span> {formatShape(layer.shapeOut ?? inputShape)}
-        </div>
-      </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        className="bg-indigo-500! size-5! border-2! border-white!"
-      />
+      <Handle type="target" position={Position.Top} id="input" className="w-2.5 h-2.5 bg-primary border-background border-2 top-[-5px]" />
+      <Handle type="source" position={Position.Bottom} id="output" className="w-2.5 h-2.5 bg-primary border-background border-2 bottom-[-5px]" />
     </div>
   )
 }
