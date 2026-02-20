@@ -6,6 +6,7 @@ import Models from './routes/Models'
 import ModelPage from './routes/Model'
 import Test from './routes/Test'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { CollabPresence } from './components/CollabPresence'
 
 const queryClient = new QueryClient()
 
@@ -15,29 +16,35 @@ export default function App() {
       <Toaster position="top-right" />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <header className="h-[52px] border-b border-border bg-card flex items-center justify-between px-4 shrink-0">
-            {/* Left Box: Logo and File dropdown */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                <div className="w-6 h-6 rounded bg-primary flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(139,92,246,0.3)]">
-                  {/* Neural network / nodes icon */}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                  </svg>
-                </div>
-                <span className="font-semibold text-foreground text-sm tracking-wide">FigmaNN</span>
+          <header className="h-16 border-b border-gray-200 bg-white shadow-sm">
+            <div className="h-full grid grid-cols-3 max-w-7xl mx-auto px-4 flex gap-8">
+              <h1 className="text-xl flex items-center gap-2 font-bold text-gray-900"><img src="/kiwi.svg" alt="" className="h-6 w-6" />Stitch</h1>
+                <nav className="flex gap-4 text-sm justify-center font-medium">
+                <NavLink
+                  to="/playground"
+                  className="group flex items-center gap-2 hover:text-gray-600 transition-colors"
+                >
+                  <img src="/build.svg" alt="" className="h-4 w-4 transition-all group-hover:-rotate-45 group-hover:opacity-60" />
+                  Build
+                </NavLink>
+                <NavLink
+                  to="/models"
+                  className="group flex items-center gap-2 hover:text-gray-600 transition-colors"
+                >
+                  <img src="/models.svg" alt="" className="h-4 w-4 transition-all group-hover:-translate-y-1 group-hover:opacity-60" />
+                  Models
+                </NavLink>
+                <NavLink
+                  to="/test"
+                  className="group flex items-center gap-2 hover:text-gray-600 transition-colors"
+                >
+                  <img src="/test.svg" alt="" className="h-4 w-4 transition-all group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:opacity-60" />
+                  Test
+                </NavLink>
+                </nav>
+              <div className="flex items-center justify-end">
+                <CollabPresence />
               </div>
-              <div className="h-4 w-[1px] bg-border mx-1"></div>
-              <button className="flex items-center gap-1 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/50 px-2 py-1 rounded transition-colors font-medium">
-                File
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
             </div>
 
 

@@ -1,5 +1,7 @@
 Flask
 Flask-CORS
+flask-socketio
+simple-websocket
 torch
 torchvision
 numpy==1.26.4

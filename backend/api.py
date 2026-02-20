@@ -10,6 +10,15 @@ import random
 from pathlib import Path
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
+from flask_socketio import SocketIO
+import collab
+
+# flask-socketio tries ctx.session = ... but Flask 3.x removed the setter.
+# Add it back so the assignment just sets the internal _session attribute.
+from flask.ctx import RequestContext as _RC
+if not hasattr(_RC.session, 'fset') or _RC.session.fset is None:
+    _RC.session = property(_RC.session.fget, lambda self, v: setattr(self, '_session', v))
+
 import torch
 from torch import nn
 from controllers.model_controller import model_bp
@@ -84,7 +93,9 @@ def _model_file_path(model_id: str) -> Path:
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", logger=False, engineio_logger=False, manage_session=False, ping_timeout=5, ping_interval=5)
+collab.register_handlers(socketio)
 
 # Register blueprints
 
@@ -719,4 +730,4 @@ def stream_run_events(run_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)

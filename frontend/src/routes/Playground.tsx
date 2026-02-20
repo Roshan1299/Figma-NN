@@ -31,6 +31,8 @@ import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
 import { PresetChips, getPresetGraph, type PresetType } from '@/components/PresetChips'
+import { useCollaboration } from '@/hooks/useCollaboration'
+import { CollabCursors } from '@/components/CollabCursors'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -100,6 +102,7 @@ export default function Playground() {
     offset: number
   } | null>(null)
   const { messages, isStreaming, isGeneratingSchema, proposedSchema, sendMessage, clearProposedSchema, addMessage, clearMessages } = useChat()
+  const { broadcastOp, broadcastCursor } = useCollaboration()
 
   // Convert store state to ReactFlow format with auto-layout
   const reactFlowNodes = useMemo((): Node[] => {
@@ -162,15 +165,17 @@ export default function Playground() {
 
       const handleKey = (handle?: string | null) => handle ?? 'default';
       const edgeId = `${source}:${handleKey(connection.sourceHandle)}->${target}:${handleKey(connection.targetHandle)}`;
-      addEdge({
+      const edge = {
         id: edgeId,
         source,
         target,
         sourceHandle: connection.sourceHandle ?? null,
         targetHandle: connection.targetHandle ?? null,
-      });
+      };
+      addEdge(edge);
+      broadcastOp({ op_type: 'add_edge', payload: { edge } });
     },
-    [layers, edges, addEdge]
+    [layers, edges, addEdge, broadcastOp]
   );
 
   const onEdgesChange = useCallback(
@@ -178,10 +183,11 @@ export default function Playground() {
       changes.forEach(change => {
         if (change.type === 'remove') {
           removeEdge(change.id);
+          broadcastOp({ op_type: 'remove_edge', payload: { id: change.id } });
         }
       });
     },
-    [removeEdge]
+    [removeEdge, broadcastOp]
   );
 
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null)
@@ -192,13 +198,17 @@ export default function Playground() {
       changes.forEach((change) => {
         if (change.type === 'position' && change.position) {
           updateLayerPosition(change.id, change.position)
+          if (!change.dragging) {
+            broadcastOp({ op_type: 'update_layer_position', payload: { id: change.id, position: change.position } })
+          }
         }
         if (change.type === 'remove') {
           removeLayer(change.id)
+          broadcastOp({ op_type: 'remove_layer', payload: { id: change.id } })
         }
       })
     },
-    [updateLayerPosition, removeLayer]
+    [updateLayerPosition, removeLayer, broadcastOp]
   )
 
   const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
@@ -241,67 +251,25 @@ export default function Playground() {
           y: event.clientY,
         })
 
+        let newLayer: AnyLayer | null = null
+
         if (payload.kind === 'Dense') {
-          addLayer({
-            id: generateLayerId('Dense'),
-            kind: 'Dense',
-            params: {
-              units: payload.params.units,
-              activation: payload.params.activation,
-            },
-            position,
-          })
+          newLayer = { id: generateLayerId('Dense'), kind: 'Dense', params: { units: payload.params.units, activation: payload.params.activation }, position }
         } else if (payload.kind === 'Convolution') {
-          addLayer({
-            id: generateLayerId('Convolution'),
-            kind: 'Convolution',
-            params: {
-              filters: payload.params.filters,
-              kernel: payload.params.kernel,
-              stride: payload.params.stride,
-              padding: payload.params.padding,
-              activation: payload.params.activation,
-            },
-            position,
-          })
+          newLayer = { id: generateLayerId('Convolution'), kind: 'Convolution', params: { filters: payload.params.filters, kernel: payload.params.kernel, stride: payload.params.stride, padding: payload.params.padding, activation: payload.params.activation }, position }
         } else if (payload.kind === 'Flatten') {
-          addLayer({
-            id: generateLayerId('Flatten'),
-            kind: 'Flatten',
-            params: {},
-            position,
-          })
+          newLayer = { id: generateLayerId('Flatten'), kind: 'Flatten', params: {}, position }
         } else if (payload.kind === 'Dropout') {
-          addLayer({
-            id: generateLayerId('Dropout'),
-            kind: 'Dropout',
-            params: {
-              rate: payload.params.rate,
-            },
-            position,
-          })
+          newLayer = { id: generateLayerId('Dropout'), kind: 'Dropout', params: { rate: payload.params.rate }, position }
         } else if (payload.kind === 'Pooling') {
-          addLayer({
-            id: generateLayerId('Pooling'),
-            kind: 'Pooling',
-            params: {
-              type: 'max',
-              pool_size: payload.params.pool_size,
-              stride: payload.params.stride,
-              padding: payload.params.padding,
-            },
-            position,
-          })
+          newLayer = { id: generateLayerId('Pooling'), kind: 'Pooling', params: { type: 'max', pool_size: payload.params.pool_size, stride: payload.params.stride, padding: payload.params.padding }, position }
         } else if (payload.kind === 'Output') {
-          addLayer({
-            id: generateLayerId('Output'),
-            kind: 'Output',
-            params: {
-              classes: payload.params.classes,
-              activation: payload.params.activation,
-            },
-            position,
-          })
+          newLayer = { id: generateLayerId('Output'), kind: 'Output', params: { classes: payload.params.classes, activation: payload.params.activation }, position }
+        }
+
+        if (newLayer) {
+          addLayer(newLayer)
+          broadcastOp({ op_type: 'add_layer', payload: { layer: newLayer } })
         }
       } catch (error) {
       }
@@ -353,12 +321,15 @@ export default function Playground() {
           }
           const newId = generateLayerId(copiedLayer.kind)
 
-          addLayer({
+          const pastedLayer = {
             id: newId,
             kind: copiedLayer.kind,
             params: JSON.parse(JSON.stringify(copiedLayer.params)),
             position,
-          })
+          } as AnyLayer
+
+          addLayer(pastedLayer)
+          broadcastOp({ op_type: 'add_layer', payload: { layer: pastedLayer } })
 
           setCopiedLayer((prev) =>
             prev
@@ -376,8 +347,14 @@ export default function Playground() {
       if (isDeleteKey) {
         if (selectedNodeIds.length > 0 || selectedEdgeIds.length > 0) {
           event.preventDefault()
-          selectedNodeIds.forEach((id) => removeLayer(id))
-          selectedEdgeIds.forEach((id) => removeEdge(id))
+          selectedNodeIds.forEach((id) => {
+            removeLayer(id)
+            broadcastOp({ op_type: 'remove_layer', payload: { id } })
+          })
+          selectedEdgeIds.forEach((id) => {
+            removeEdge(id)
+            broadcastOp({ op_type: 'remove_edge', payload: { id } })
+          })
         }
       }
     }
@@ -386,15 +363,17 @@ export default function Playground() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [selectedNodeIds, selectedEdgeIds, layers, copiedLayer, addLayer, removeLayer, removeEdge])
+  }, [selectedNodeIds, selectedEdgeIds, layers, copiedLayer, addLayer, removeLayer, removeEdge, broadcastOp])
 
   const handlePresetSelect = useCallback((preset: PresetType) => {
     const presetGraph = getPresetGraph(preset)
     loadGraph(presetGraph.layers, presetGraph.edges)
+    broadcastOp({ op_type: 'load_graph', payload: { layers: presetGraph.layers, edges: presetGraph.edges } })
+    setCurrentPreset(preset)
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
     }
-  }, [loadGraph, reactFlowInstance])
+  }, [loadGraph, reactFlowInstance, broadcastOp])
 
   useEffect(() => {
     if (Object.keys(layers).length === 0) {
@@ -446,17 +425,31 @@ export default function Playground() {
     if (proposedSchema) {
       console.log('Applying proposed schema:', proposedSchema)
       applyProposedSchema(proposedSchema)
+      broadcastOp({ op_type: 'load_graph', payload: { layers: proposedSchema.layers as Record<string, unknown>, edges: proposedSchema.edges } })
       addMessage({ role: 'system', content: 'Architecture changes applied successfully.' })
       setShowProposalPreview(false)
       clearProposedSchema()
     }
-  }, [proposedSchema, applyProposedSchema, clearProposedSchema, addMessage])
+  }, [proposedSchema, applyProposedSchema, clearProposedSchema, addMessage, broadcastOp])
 
   const handleRejectProposal = useCallback(() => {
     addMessage({ role: 'system', content: 'Architecture changes rejected.' })
     setShowProposalPreview(false)
     clearProposedSchema()
   }, [clearProposedSchema, addMessage])
+
+  const onMouseMoveOnCanvas = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!reactFlowInstance || !reactFlowWrapper.current) return
+      const rect = reactFlowWrapper.current.getBoundingClientRect()
+      const flowPos = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      })
+      broadcastCursor(flowPos.x, flowPos.y)
+    },
+    [reactFlowInstance, broadcastCursor]
+  )
 
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden bg-background">
@@ -535,7 +528,7 @@ export default function Playground() {
 
         </div>
 
-        <div className="flex-1 w-full" ref={reactFlowWrapper}>
+        <div className="h-full w-full" ref={reactFlowWrapper} onMouseMove={onMouseMoveOnCanvas}>
           <ReactFlow
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
