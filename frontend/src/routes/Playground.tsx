@@ -260,7 +260,7 @@ export default function Playground() {
       targetHandle: edge.targetHandle ?? undefined,
       label: edge.label,
       animated: true,
-      style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.5)' },
+      style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.6)' },
       labelStyle: { fill: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: 'ui-monospace,monospace', fontWeight: 500 },
       labelBgStyle: { fill: 'transparent', stroke: 'transparent' },
       labelBgPadding: [2, 2] as [number, number],
