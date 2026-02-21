@@ -69,14 +69,15 @@ export function PortHandle({
       <div className="absolute inset-0 rounded-full opacity-0 hover:opacity-10 bg-current transition-opacity" />
 
       {/* Visible port circle "tip" */}
-      <div className="relative w-4 h-4 rounded-full before:absolute before:inset-0 before:rounded-full before:border-2 before:border-background before:transition-all before:duration-200 group-hover/port:before:scale-125">
-        <Handle
-          type={isInput ? 'target' : 'source'}
-          position={position}
-          className="w-4 h-4 opacity-0"
-          {...props}
-        />
-      </div>
+      <div className="relative w-4 h-4 rounded-full before:absolute before:inset-0 before:rounded-full before:border-2 before:border-background before:transition-all before:duration-200 group-hover/port:before:scale-125" />
+
+      {/* Large invisible Handle for reliable drag detection */}
+      <Handle
+        type={isInput ? 'target' : 'source'}
+        position={position}
+        className="w-12 h-12 opacity-0"
+        {...props}
+      />
     </div>
   )
 }
