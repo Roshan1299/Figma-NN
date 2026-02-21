@@ -241,7 +241,7 @@ export default function Playground() {
     return layerArray.map((layer, index) => ({
       id: layer.id,
       type: layerKindToNodeType[layer.kind],
-      position: layer.position ?? { x: index * 300 + 50, y: 250 },
+      position: layer.position ?? { x: index * 380 + 50, y: 250 },
       data: { isDragging: draggingNodeId === layer.id },
       draggable: true,
       style: {
@@ -697,6 +697,7 @@ export default function Playground() {
           onToggle={() => setBottomCollapsed(v => !v)}
           onParamsChange={(p) => { setHyperparams(p); if (lastTrainedRef.current) setIsDirty(true) }}
           onPresetSelect={handlePresetSelect}
+          hyperparams={hyperparams}
         />
       </div>
 

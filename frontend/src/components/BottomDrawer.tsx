@@ -1,12 +1,14 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import type { Hyperparams } from './HyperparamsPanel'
 import { DEFAULT_HYPERPARAMS } from './HyperparamsPanel'
 import type { PresetType } from './PresetChips'
 import { DrawingGrid } from './DrawingGrid'
 import type { DrawingGridRef } from './DrawingGrid'
 import { useModels, useModel } from '../hooks/useModels'
+import { useGraphStore } from '../store/graphStore'
+import { generatePyTorchCode, highlightPython } from '../lib/codeGenerator'
 
-type TabId = 'config' | 'canvas' | 'logs'
+type TabId = 'config' | 'canvas' | 'code'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   {
@@ -20,9 +22,9 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>,
   },
   {
-    id: 'logs',
-    label: 'Logs',
-    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
+    id: 'code',
+    label: 'Code',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
   },
 ]
 
@@ -159,6 +161,75 @@ function ConfigTab({ onParamsChange, onPresetSelect }: {
             {params.shuffle ? 'On' : 'Off'}
           </button>
         </Row>
+      </div>
+    </div>
+  )
+}
+
+// ── Code tab ──────────────────────────────────────────────────────────────────
+
+function CodeTab({ hyperparams }: { hyperparams?: Hyperparams }) {
+  const { layers, edges } = useGraphStore()
+  const [copied, setCopied] = useState(false)
+
+  const code = useMemo(
+    () => generatePyTorchCode(layers, edges, hyperparams),
+    [layers, edges, hyperparams]
+  )
+
+  const highlighted = useMemo(() => highlightPython(code), [code])
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [code])
+
+  const handleDownload = useCallback(() => {
+    const blob = new Blob([code], { type: 'text/x-python' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'model.py'
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [code])
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 px-4 py-2 shrink-0" style={{ borderBottom: '1px solid #1e1e1e' }}>
+        <span className="text-[11px] font-semibold uppercase tracking-widest flex-1" style={{ color: '#444' }}>
+          PyTorch · auto-generated
+        </span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
+          style={{ background: copied ? '#0c2d3e' : '#1c1c1e', border: `1px solid ${copied ? '#0891b244' : '#2a2a2e'}`, color: copied ? '#22d3ee' : '#666' }}
+        >
+          {copied ? (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Copied</>
+          ) : (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</>
+          )}
+        </button>
+        <button
+          onClick={handleDownload}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
+          style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#666' }}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          model.py
+        </button>
+      </div>
+      {/* Code block */}
+      <div className="flex-1 overflow-auto custom-scrollbar">
+        <pre
+          className="text-[11.5px] leading-relaxed px-4 py-3 font-mono"
+          style={{ color: '#d4d4d4', background: 'transparent', margin: 0, whiteSpace: 'pre', tabSize: 4 }}
+          dangerouslySetInnerHTML={{ __html: highlighted }}
+        />
       </div>
     </div>
   )
@@ -332,11 +403,13 @@ export function BottomDrawer({
   onToggle,
   onParamsChange,
   onPresetSelect,
+  hyperparams,
 }: {
   collapsed: boolean
   onToggle: () => void
   onParamsChange?: (p: Hyperparams) => void
   onPresetSelect?: (p: PresetType) => void
+  hyperparams?: Hyperparams
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('config')
 
@@ -400,10 +473,8 @@ export function BottomDrawer({
           {activeTab === 'canvas' && (
             <CanvasTab />
           )}
-          {activeTab === 'logs' && (
-            <div className="flex items-center justify-center h-full">
-              <span className="text-[12px]" style={{ color: '#333' }}>No logs yet.</span>
-            </div>
+          {activeTab === 'code' && (
+            <CodeTab hyperparams={hyperparams} />
           )}
         </div>
       )}
