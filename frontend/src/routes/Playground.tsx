@@ -23,6 +23,7 @@ import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
 import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { useTrainingMetrics } from '@/hooks/useTraining'
+import { useNodeDragState } from '@/hooks/useNodeDragState'
 import { LeftSidebar } from '@/components/LeftSidebar'
 import { RightInspector } from '@/components/RightInspector'
 import { BottomDrawer } from '@/components/BottomDrawer'
@@ -236,7 +237,7 @@ export default function Playground() {
       id: layer.id,
       type: layerKindToNodeType[layer.kind],
       position: layer.position ?? { x: index * 300 + 50, y: 250 },
-      data: {},
+      data: { isDragging: draggingNodeId === layer.id },
       draggable: true,
       style: {
         background: 'transparent',
@@ -245,7 +246,7 @@ export default function Playground() {
         boxShadow: 'none',
       },
     }));
-  }, [layers]);
+  }, [layers, draggingNodeId]);
 
   const reactFlowEdges = useMemo((): Edge[] => {
     return edges.map(edge => ({
@@ -317,13 +318,17 @@ export default function Playground() {
 
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       changes.forEach((change) => {
         if (change.type === 'position' && change.position) {
           updateLayerPosition(change.id, change.position)
-          if (!change.dragging) {
+          if (change.dragging) {
+            setDraggingNodeId(change.id)
+          } else {
+            setDraggingNodeId(null)
             broadcastOp({ op_type: 'update_layer_position', payload: { id: change.id, position: change.position } })
           }
         }
