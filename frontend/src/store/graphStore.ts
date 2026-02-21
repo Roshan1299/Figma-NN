@@ -97,7 +97,14 @@ function computeOutputShape(layer: AnyLayer, inputShape?: TensorShape): TensorSh
       return { type: 'unknown' }
 
     case 'Dropout':
+    case 'BatchNorm':
       return inputShape ?? { type: 'unknown' }
+
+    case 'ResidualBlock': {
+      if (!inputShape || inputShape.type !== 'image') return { type: 'unknown' }
+      // Same-padding convolutions preserve spatial dims; channel count changes to filters
+      return { type: 'image', channels: layer.params.filters, height: inputShape.height, width: inputShape.width }
+    }
 
     case 'Output':
       if (inputShape?.type === 'vector') {
@@ -590,6 +597,25 @@ export function graphToArchitecture(
     } else if (layer.kind === 'Dropout') {
       const rate = Math.min(1, Math.max(0, layer.params.rate))
       backendLayers.push({ type: 'dropout', p: rate })
+    } else if (layer.kind === 'BatchNorm') {
+      if (currentShape.type === 'image') {
+        backendLayers.push({ type: 'batchnorm2d', num_features: currentShape.channels })
+      } else if (currentShape.type === 'vector') {
+        backendLayers.push({ type: 'batchnorm1d', num_features: currentShape.size })
+      }
+    } else if (layer.kind === 'ResidualBlock') {
+      if (currentShape.type !== 'image') {
+        throw new Error('ResidualBlock requires image (CHW) input')
+      }
+      const { filters, kernel } = layer.params
+      const k = kernel ?? 3
+      backendLayers.push({
+        type: 'residual_block',
+        in_channels: currentShape.channels,
+        out_channels: filters,
+        kernel_size: k,
+      })
+      currentShape = { type: 'image', channels: filters, height: currentShape.height, width: currentShape.width }
     } else if (layer.kind === 'Output') {
       currentShape = ensureFlattenLayer(currentShape, backendLayers)
 

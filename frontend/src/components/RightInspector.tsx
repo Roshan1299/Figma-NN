@@ -257,6 +257,34 @@ function LayerPropsEditor({ layer, onUpdate, inputShape }: {
     )
   }
 
+  if (layer.kind === 'BatchNorm') {
+    return (
+      <div>
+        <div className="rounded-xl px-4 py-3 text-[13px] mb-4" style={{ background: '#1c1c1e', color: '#666' }}>
+          No configurable parameters — normalizes activations per-channel.
+        </div>
+        {shapeBlock}
+      </div>
+    )
+  }
+
+  if (layer.kind === 'ResidualBlock') {
+    return (
+      <div className="space-y-4">
+        <Field label="Filters">
+          <DarkInput value={layer.params.filters} onChange={v => onUpdate({ filters: v })} min={1} max={512} />
+        </Field>
+        <Field label="Kernel Size">
+          <DarkInput value={layer.params.kernel} onChange={v => onUpdate({ kernel: v })} min={1} max={7} />
+        </Field>
+        <div className="rounded-xl px-4 py-3 text-[13px]" style={{ background: '#1c1c1e', color: '#666' }}>
+          Conv → BN → ReLU → Conv → BN + skip connection
+        </div>
+        {shapeBlock}
+      </div>
+    )
+  }
+
   return null
 }
 
@@ -662,12 +690,24 @@ export const RightInspector: FC<RightInspectorProps> = ({
                   <h2 className="text-[20px] font-bold text-white">{selectedLayer.kind} Layer</h2>
                   <p className="text-[11px] font-mono mt-0.5" style={{ color: '#444' }}>{selectedLayer.id}</p>
                 </div>
-                <span
-                  className="text-[11px] font-semibold px-3 py-1 rounded-full"
-                  style={{ background: '#0d3d3d', color: '#3ecfcf', border: '1px solid #1a5555' }}
-                >
-                  Active
-                </span>
+                {(() => {
+                  const isConnected = selectedLayer.kind === 'Input' || edges.some(e => e.target === selectedLayer.id)
+                  return isConnected ? (
+                    <span
+                      className="text-[11px] font-semibold px-3 py-1 rounded-full"
+                      style={{ background: '#0d3d3d', color: '#3ecfcf', border: '1px solid #1a5555' }}
+                    >
+                      Active
+                    </span>
+                  ) : (
+                    <span
+                      className="text-[11px] font-semibold px-3 py-1 rounded-full"
+                      style={{ background: '#2a1a1a', color: '#f87171', border: '1px solid #553333' }}
+                    >
+                      Disconnected
+                    </span>
+                  )
+                })()}
               </div>
 
               <LayerPropsEditor
