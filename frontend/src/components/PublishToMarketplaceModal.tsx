@@ -4,11 +4,12 @@ import { createMarketplaceModel } from '../api/marketplace';
 
 interface PublishToMarketplaceModalProps {
   architecture: Record<string, any>;
+  previewImage: string | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function PublishToMarketplaceModal({ architecture, open, onClose }: PublishToMarketplaceModalProps) {
+export function PublishToMarketplaceModal({ architecture, previewImage, open, onClose }: PublishToMarketplaceModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -40,7 +41,8 @@ export function PublishToMarketplaceModal({ architecture, open, onClose }: Publi
         description: formData.description,
         tags: tagsArray,
         authorName: formData.authorName,
-        architecture
+        architecture,
+        previewImage: previewImage ?? undefined,
       };
 
       const { id } = await createMarketplaceModel(request);
@@ -67,6 +69,17 @@ export function PublishToMarketplaceModal({ architecture, open, onClose }: Publi
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
+
+        {/* Preview thumbnail */}
+        {previewImage && (
+          <div className="px-6 pt-4">
+            <img
+              src={previewImage}
+              alt="Architecture preview"
+              className="w-full h-32 object-contain rounded-lg bg-gray-900 border border-gray-200"
+            />
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="p-6">
           {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded border border-red-100">{error}</div>}

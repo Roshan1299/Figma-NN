@@ -1,7 +1,8 @@
 import '@xyflow/react/dist/style.css'
 import { Toaster } from 'sonner'
 import { BrowserRouter, Route, Routes, Navigate, Link } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toPng } from 'html-to-image'
 import Playground from './routes/Playground'
 import Models from './routes/Models'
 import ModelPage from './routes/Model'
@@ -20,6 +21,7 @@ const queryClient = new QueryClient()
 function ShareDropdown() {
   const [open, setOpen] = useState(false)
   const [publishOpen, setPublishOpen] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const { layers, edges } = useGraphStore()
@@ -42,6 +44,26 @@ function ShareDropdown() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const captureCanvas = useCallback(async (): Promise<string | null> => {
+    const el = document.querySelector('.react-flow') as HTMLElement | null
+    if (!el) return null
+    try {
+      const dataUrl = await toPng(el, {
+        backgroundColor: '#0a0a0a',
+        pixelRatio: 1,
+        filter: (node) => {
+          // Exclude controls and minimap from screenshot
+          const cls = (node as HTMLElement).className ?? ''
+          if (typeof cls === 'string' && (cls.includes('react-flow__controls') || cls.includes('react-flow__minimap'))) return false
+          return true
+        },
+      })
+      return dataUrl
+    } catch {
+      return null
+    }
+  }, [])
+
   function handleDownloadPy() {
     setOpen(false)
     const code = generatePyTorchCode(layers, edges)
@@ -54,8 +76,10 @@ function ShareDropdown() {
     URL.revokeObjectURL(url)
   }
 
-  function handlePublish() {
+  async function handlePublish() {
     setOpen(false)
+    const img = await captureCanvas()
+    setPreviewImage(img)
     setPublishOpen(true)
   }
 
@@ -65,7 +89,6 @@ function ShareDropdown() {
         onClick={() => setOpen(v => !v)}
         className="bg-muted hover:bg-primary/10 hover:text-primary hover:border-primary/30 text-foreground text-sm font-medium px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors border border-border"
       >
-        {/* share icon */}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
@@ -110,6 +133,7 @@ function ShareDropdown() {
 
       <PublishToMarketplaceModal
         architecture={currentArchitecture}
+        previewImage={previewImage}
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
       />
