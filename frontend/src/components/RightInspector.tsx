@@ -543,6 +543,11 @@ export const RightInspector: FC<RightInspectorProps> = ({
     if (selectedNodeId && !isTraining) setActiveTab('props')
   }, [selectedNodeId, isTraining])
 
+  useEffect(() => {
+    setSavedModelId(null)
+    setModelName('')
+  }, [runId])
+
   const latestMetric = throttledMetrics.at(-1) ?? null
 
   const trends = useMemo(() => {
