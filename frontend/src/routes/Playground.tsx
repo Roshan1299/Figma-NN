@@ -102,7 +102,7 @@ function TrainBar({
   const isDone = effectiveState === 'succeeded'
   const isFailed = effectiveState === 'failed'
 
-  const bottomOffset = drawerCollapsed ? 48 : 228
+  const bottomOffset = drawerCollapsed ? 48 : 308
 
   return (
     <div
