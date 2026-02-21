@@ -20,9 +20,8 @@ import { OutputLayerNode } from '@/components/nodes/OutputLayerNode'
 import { PoolingLayerNode } from '@/components/nodes/PoolingLayerNode'
 import { FlattenLayerNode } from '@/components/nodes/FlattenLayerNode'
 import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
-import { HyperparamsPanel, type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
+import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
-import { TrainingMetricsSlideOver } from '@/components/TrainingMetricsSlideOver'
 import { useTrainingMetrics } from '@/hooks/useTraining'
 import { LeftSidebar } from '@/components/LeftSidebar'
 import { RightInspector } from '@/components/RightInspector'
@@ -31,9 +30,12 @@ import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
 import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
-import { PresetChips, getPresetGraph, type PresetType } from '@/components/PresetChips'
+import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
+import { ConnectionPreview } from '@/components/ConnectionPreview'
+import { GridBackground } from '@/components/GridBackground'
+import { AlignmentGuides } from '@/components/AlignmentGuides'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -67,6 +69,125 @@ const layerIdPrefixes: Record<LayerKind, string> = {
 
 const duplicableLayerKinds = new Set<LayerKind>(['Dense', 'Convolution', 'Pooling', 'Dropout', 'Flatten'])
 
+// ── Train Bar component ───────────────────────────────────────────────────────
+import type { MetricData } from '@/api/types'
+import type { Hyperparams as HyperparamsType } from '@/components/HyperparamsPanel'
+
+function TrainBar({
+  isTraining, canCancel, isCancelling, currentState, metrics, hyperparams,
+  onTrain, onCancel, drawerCollapsed, isDirty,
+}: {
+  isTraining: boolean
+  canCancel: boolean
+  isCancelling: boolean
+  currentState: string | null
+  metrics: MetricData[]
+  hyperparams: HyperparamsType
+  onTrain: () => void
+  onCancel: () => void
+  drawerCollapsed: boolean
+  isDirty: boolean
+}) {
+  const latestMetric = metrics.at(-1)
+  const totalEpochs = hyperparams.epochs ?? 10
+  const overallProgress = latestMetric
+    ? Math.min(1, ((latestMetric.epoch - 1 + (latestMetric.progress ?? 1)) / totalEpochs))
+    : 0
+  const pct = isTraining ? Math.round(overallProgress * 100)
+    : currentState === 'succeeded' && !isDirty ? 100
+    : 0
+
+  // When user changes something after training, revert to ready state
+  const effectiveState = isDirty ? null : currentState
+  const isDone = effectiveState === 'succeeded'
+  const isFailed = effectiveState === 'failed'
+
+  const bottomOffset = drawerCollapsed ? 48 : 308
+
+  return (
+    <div
+      className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+      style={{ bottom: bottomOffset }}
+    >
+      <button
+        onClick={canCancel ? onCancel : (!isDone && !isFailed ? onTrain : onTrain)}
+        disabled={isCancelling || (isTraining && !canCancel)}
+        className="relative flex items-center gap-4 rounded-2xl px-3 py-3 select-none transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+        style={{
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(8, 15, 20, 0.75)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+          minWidth: 280,
+          cursor: isCancelling ? 'wait' : 'pointer',
+        }}
+      >
+        {/* Circle icon */}
+        <div
+          className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all"
+          style={{
+            background: isDone ? '#065f46' : isFailed ? '#7f1d1d' : canCancel ? '#0e7490' : '#0891b2',
+            boxShadow: `0 0 16px ${isDone ? '#34d39944' : isFailed ? '#f8717144' : '#0891b244'}`,
+          }}
+        >
+          {isCancelling ? (
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
+              <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : canCancel ? (
+            <svg className="w-5 h-5" fill="white" viewBox="0 0 20 20">
+              <path d="M5 4a1 1 0 00-1 1v10a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1H5zm8 0a1 1 0 00-1 1v10a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1h-2z" />
+            </svg>
+          ) : isDone ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : isFailed ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 ml-0.5" fill="white" viewBox="0 0 20 20">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+            </svg>
+          )}
+        </div>
+
+        {/* Text */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-2">
+            <span
+              className="text-[13px] font-semibold tracking-widest uppercase"
+              style={{ color: isDone ? '#34d399' : isFailed ? '#f87171' : '#aaa' }}
+            >
+              {isCancelling ? 'Cancelling…'
+                : canCancel ? 'Stop Training'
+                : isDone ? 'Completed'
+                : isFailed ? 'Failed'
+                : 'Ready to Train'}
+            </span>
+            <span className="text-[13px] font-bold font-mono ml-4" style={{ color: isDone ? '#34d399' : '#0891b2' }}>
+              {pct}%
+            </span>
+          </div>
+          {/* Progress bar */}
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1e2a2e' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${isDone ? 100 : pct}%`,
+                background: isDone ? '#34d399' : isFailed ? '#f87171' : 'linear-gradient(90deg, #06b6d4, #22d3ee)',
+              }}
+            />
+          </div>
+        </div>
+      </button>
+    </div>
+  )
+}
+
 function generateLayerId(kind: LayerKind) {
   const prefix = layerIdPrefixes[kind]
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -78,8 +199,13 @@ function generateLayerId(kind: LayerKind) {
 export default function Playground() {
   const { layers, edges, addLayer, addEdge, removeEdge, updateLayerPosition, removeLayer, applyProposedSchema, loadGraph } = useGraphStore()
   const [hyperparams, setHyperparams] = useState<Hyperparams>(DEFAULT_HYPERPARAMS)
-  const [metricsSlideOverOpen, setMetricsSlideOverOpen] = useState(false)
   const [showProposalPreview, setShowProposalPreview] = useState(false)
+  const [leftCollapsed, setLeftCollapsed] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [bottomCollapsed, setBottomCollapsed] = useState(false)
+  // Track if anything changed since last training run (to reset the train button)
+  const [isDirty, setIsDirty] = useState(false)
+  const lastTrainedRef = useRef(false)
   const {
     metrics,
     currentState,
@@ -96,6 +222,7 @@ export default function Playground() {
   )
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([])
+  const [pinnedNodeId, setPinnedNodeId] = useState<string | null>(null)
   const [copiedLayer, setCopiedLayer] = useState<{
     kind: LayerKind
     params: Record<string, any>
@@ -104,6 +231,7 @@ export default function Playground() {
   } | null>(null)
   const { messages, isStreaming, isGeneratingSchema, proposedSchema, sendMessage, clearProposedSchema, addMessage, clearMessages } = useChat()
   const { broadcastOp, broadcastCursor } = useCollaboration()
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   // Convert store state to ReactFlow format with auto-layout
   const reactFlowNodes = useMemo((): Node[] => {
@@ -112,7 +240,7 @@ export default function Playground() {
       id: layer.id,
       type: layerKindToNodeType[layer.kind],
       position: layer.position ?? { x: index * 300 + 50, y: 250 },
-      data: {},
+      data: { isDragging: draggingNodeId === layer.id },
       draggable: true,
       style: {
         background: 'transparent',
@@ -121,7 +249,7 @@ export default function Playground() {
         boxShadow: 'none',
       },
     }));
-  }, [layers]);
+  }, [layers, draggingNodeId]);
 
   const reactFlowEdges = useMemo((): Edge[] => {
     return edges.map(edge => ({
@@ -132,25 +260,50 @@ export default function Playground() {
       targetHandle: edge.targetHandle ?? undefined,
       label: edge.label,
       animated: true,
-      style: {
-        strokeWidth: 3,
-        stroke: '#1f293799'
-      }
+      reconnectable: true,
+      style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.6)' },
+      labelStyle: { fill: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: 'ui-monospace,monospace', fontWeight: 500 },
+      labelBgStyle: { fill: 'transparent', stroke: 'transparent' },
+      labelBgPadding: [2, 2] as [number, number],
     }));
   }, [edges]);
+
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      const { source, target } = newConnection;
+      if (!source || !target) return;
+
+      const sourceLayer = layers[source];
+      const targetLayer = layers[target];
+      if (!sourceLayer || !targetLayer) return;
+
+      const validation = validateConnection(sourceLayer, targetLayer);
+      if (!validation.valid) {
+        notifyConnectionError(validation.error || 'Invalid connection');
+        return;
+      }
+
+      removeEdge(oldEdge.id);
+      const handleKey = (handle?: string | null) => handle ?? 'default';
+      const edgeId = `${source}:${handleKey(newConnection.sourceHandle)}->${target}:${handleKey(newConnection.targetHandle)}`;
+      const edge = {
+        id: edgeId,
+        source,
+        target,
+        sourceHandle: newConnection.sourceHandle ?? null,
+        targetHandle: newConnection.targetHandle ?? null,
+      };
+      addEdge(edge);
+      broadcastOp({ op_type: 'remove_edge', payload: { id: oldEdge.id } });
+      broadcastOp({ op_type: 'add_edge', payload: { edge } });
+    },
+    [layers, removeEdge, addEdge, broadcastOp]
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
       const { source, target } = connection;
       if (!source || !target) return;
-
-      console.log('[ReactFlow] connect attempt', {
-        source,
-        target,
-        sourceHandle: connection.sourceHandle ?? null,
-        targetHandle: connection.targetHandle ?? null,
-        existingEdges: edges,
-      })
 
       const sourceLayer = layers[source];
       const targetLayer = layers[target];
@@ -199,7 +352,10 @@ export default function Playground() {
       changes.forEach((change) => {
         if (change.type === 'position' && change.position) {
           updateLayerPosition(change.id, change.position)
-          if (!change.dragging) {
+          if (change.dragging) {
+            setDraggingNodeId(change.id)
+          } else {
+            setDraggingNodeId(null)
             broadcastOp({ op_type: 'update_layer_position', payload: { id: change.id, position: change.position } })
           }
         }
@@ -225,6 +381,7 @@ export default function Playground() {
       if (!raw) return
 
       type LayerTemplatePayload =
+        | { kind: 'Input'; params: { dataset: 'mnist' | 'emnist'; size?: number } }
         | { kind: 'Dense'; params: { units: number; activation: ActivationType } }
         | {
           kind: 'Convolution'
@@ -254,7 +411,9 @@ export default function Playground() {
 
         let newLayer: AnyLayer | null = null
 
-        if (payload.kind === 'Dense') {
+        if (payload.kind === 'Input') {
+          newLayer = { id: generateLayerId('Input'), kind: 'Input', params: { dataset: payload.params.dataset ?? 'mnist', size: payload.params.size ?? 784 }, position }
+        } else if (payload.kind === 'Dense') {
           newLayer = { id: generateLayerId('Dense'), kind: 'Dense', params: { units: payload.params.units, activation: payload.params.activation }, position }
         } else if (payload.kind === 'Convolution') {
           newLayer = { id: generateLayerId('Convolution'), kind: 'Convolution', params: { filters: payload.params.filters, kernel: payload.params.kernel, stride: payload.params.stride, padding: payload.params.padding, activation: payload.params.activation }, position }
@@ -278,8 +437,11 @@ export default function Playground() {
     [addLayer, reactFlowInstance]
   )
   const onSelectionChange = useCallback((params: { nodes: Node[]; edges: Edge[] }) => {
-    setSelectedNodeIds(params.nodes.map((node) => node.id))
+    const nodeIds = params.nodes.map((node) => node.id)
+    setSelectedNodeIds(nodeIds)
     setSelectedEdgeIds(params.edges.map((edge) => edge.id))
+    // Keep last selected node pinned so props don't disappear when typing in inputs
+    if (nodeIds.length === 1) setPinnedNodeId(nodeIds[0])
   }, [])
 
   useEffect(() => {
@@ -370,11 +532,17 @@ export default function Playground() {
     const presetGraph = getPresetGraph(preset)
     loadGraph(presetGraph.layers, presetGraph.edges)
     broadcastOp({ op_type: 'load_graph', payload: { layers: presetGraph.layers, edges: presetGraph.edges } })
-    setCurrentPreset(preset)
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
     }
   }, [loadGraph, reactFlowInstance, broadcastOp])
+
+  // Mark dirty when layers/edges change after a training run
+  useEffect(() => {
+    if (lastTrainedRef.current) {
+      setIsDirty(true)
+    }
+  }, [layers, edges])
 
   useEffect(() => {
     if (Object.keys(layers).length === 0) {
@@ -408,10 +576,8 @@ export default function Playground() {
         dataset_type: datasetType
       }
 
-      console.log('🚀 Starting training with architecture:', architecture)
-      console.log('📊 Hyperparameters:', updatedHyperparams)
-
-      setMetricsSlideOverOpen(true)
+      setIsDirty(false)
+      lastTrainedRef.current = true
 
       startTraining({
         architecture,
@@ -454,86 +620,16 @@ export default function Playground() {
 
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden bg-background">
-      <LeftSidebar />
+      <LeftSidebar collapsed={leftCollapsed} onToggleCollapse={() => setLeftCollapsed(v => !v)} />
 
       {/* Center Workspace */}
       <div className="flex-1 relative flex flex-col min-w-0">
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-4 pointer-events-none">
-          <div className="flex flex-row gap-4 items-start pointer-events-auto">
-            <HyperparamsPanel onParamsChange={setHyperparams} />
-            <PresetChips onPresetSelect={handlePresetSelect} />
-          </div>
-        </div>
-
-        <div className="absolute top-4 right-4 z-10 flex flex-row gap-4 pointer-events-auto">
-          {(metrics.length > 0 || currentState !== null) && (
-            <button
-              onClick={() => setMetricsSlideOverOpen(true)}
-              className="z-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2.5 rounded-lg shadow-lg transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-              </svg>
-              Metrics
-            </button>
-          )}
-          <button
-            onClick={() => {
-              if (canCancelTraining) {
-                void cancelActiveTraining()
-              } else {
-                handleRun()
-              }
-            }}
-            disabled={canCancelTraining ? isCancelling : isTraining}
-            className={`${canCancelTraining
-              ? isCancelling
-                ? 'bg-destructive/60 cursor-wait'
-                : 'bg-destructive hover:bg-destructive/90 cursor-pointer'
-              : isTraining
-                ? 'bg-muted cursor-not-allowed text-muted-foreground'
-                : 'bg-primary hover:bg-primary/90 cursor-pointer'
-              } text-white font-semibold px-6 py-2.5 rounded-lg shadow-lg transition-colors flex items-center gap-2`}
-          >
-            {canCancelTraining ? (
-              <>
-                {isCancelling ? (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 4a1 1 0 00-1 1v10a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1H5zm8 0a1 1 0 00-1 1v10a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1h-2z" />
-                  </svg>
-                )}
-                {isCancelling ? 'Cancelling...' : 'Cancel training'}
-              </>
-            ) : isTraining ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Training...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
-                Train
-              </>
-            )}
-          </button>
-
-        </div>
-
         <div className="h-full w-full" ref={reactFlowWrapper} onMouseMove={onMouseMoveOnCanvas}>
           <ReactFlow
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
             onConnect={onConnect}
+            onReconnect={onReconnect}
             onEdgesChange={onEdgesChange}
             onNodesChange={onNodesChange}
             onSelectionChange={onSelectionChange}
@@ -542,36 +638,61 @@ export default function Playground() {
             nodesDraggable={!isTraining}
             nodesConnectable={!isTraining}
             nodeTypes={nodeTypes}
+            selectNodesOnDrag={false}
+            multiSelectionKeyCode="shift"
+            panOnDrag={true}
+            panOnScroll={false}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
             fitView
             snapToGrid
             snapGrid={[15, 15]}
-            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.48 0.25 285)', strokeWidth: 2, strokeDasharray: '4 4' } }}
+            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.65 0.15 195)', strokeWidth: 2, strokeDasharray: '4 4' } }}
             onInit={setReactFlowInstance}
             className="bg-background [&_.react-flow__pane]:bg-transparent"
           >
+            <GridBackground />
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <AlignmentGuides />
+            <ConnectionPreview />
             <CollabCursors />
           </ReactFlow>
         </div>
 
-        <BottomDrawer />
+        {/* Train Bar — floats above BottomDrawer */}
+        <TrainBar
+          isTraining={isTraining}
+          canCancel={canCancelTraining}
+          isCancelling={isCancelling}
+          currentState={currentState}
+          metrics={metrics}
+          hyperparams={hyperparams}
+          onTrain={handleRun}
+          onCancel={() => { void cancelActiveTraining() }}
+          drawerCollapsed={bottomCollapsed}
+          isDirty={isDirty}
+        />
+
+        <BottomDrawer
+          collapsed={bottomCollapsed}
+          onToggle={() => setBottomCollapsed(v => !v)}
+          onParamsChange={(p) => { setHyperparams(p); if (lastTrainedRef.current) setIsDirty(true) }}
+          onPresetSelect={handlePresetSelect}
+        />
       </div>
 
-      <RightInspector selectedNodeId={selectedNodeIds.length === 1 ? selectedNodeIds[0] : null} />
-
-      <TrainingMetricsSlideOver
-        open={metricsSlideOverOpen}
-        onOpenChange={setMetricsSlideOverOpen}
+      <RightInspector
+        selectedNodeId={pinnedNodeId}
+        collapsed={rightCollapsed}
+        onToggleCollapse={() => setRightCollapsed(v => !v)}
         isTraining={isTraining}
         metrics={metrics}
         currentState={currentState}
         runId={runId}
         samplePredictions={samplePredictions}
         datasetType={lastRunHyperparams?.dataset_type as 'mnist' | 'emnist' | 'audio' | 'text' | undefined}
-        onCancel={() => {
-          void cancelActiveTraining()
-        }}
+        onCancel={() => { void cancelActiveTraining() }}
         canCancel={canCancelTraining}
         isCancelling={isCancelling}
       />
