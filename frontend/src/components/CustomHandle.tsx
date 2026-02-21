@@ -1,4 +1,4 @@
-import { Handle, Position, type HandleProps } from '@xyflow/react'
+import { Handle, type HandleProps } from '@xyflow/react'
 
 interface CustomHandleProps extends HandleProps {
   label?: string

@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import type { Node } from '@xyflow/react'
 
 export function useNodeDragState(setNodes: (updater: (nodes: Node[]) => Node[]) => void) {
-  const onNodeDragStart = useCallback((event: any, node: Node) => {
+  const onNodeDragStart = useCallback((_event: any, node: Node) => {
     setNodes((nds: Node[]) =>
       nds.map((n) =>
         n.id === node.id
@@ -15,7 +15,7 @@ export function useNodeDragState(setNodes: (updater: (nodes: Node[]) => Node[]) 
     )
   }, [setNodes])
 
-  const onNodeDragStop = useCallback((event: any, node: Node) => {
+  const onNodeDragStop = useCallback((_event: any, node: Node) => {
     setNodes((nds: Node[]) =>
       nds.map((n) =>
         n.id === node.id

@@ -23,7 +23,6 @@ import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
 import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { useTrainingMetrics } from '@/hooks/useTraining'
-import { useNodeDragState } from '@/hooks/useNodeDragState'
 import { LeftSidebar } from '@/components/LeftSidebar'
 import { RightInspector } from '@/components/RightInspector'
 import { BottomDrawer } from '@/components/BottomDrawer'
@@ -230,6 +229,7 @@ export default function Playground() {
   } | null>(null)
   const { messages, isStreaming, isGeneratingSchema, proposedSchema, sendMessage, clearProposedSchema, addMessage, clearMessages } = useChat()
   const { broadcastOp, broadcastCursor } = useCollaboration()
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   // Convert store state to ReactFlow format with auto-layout
   const reactFlowNodes = useMemo((): Node[] => {
@@ -319,7 +319,6 @@ export default function Playground() {
 
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
-  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
