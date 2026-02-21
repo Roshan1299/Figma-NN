@@ -199,7 +199,7 @@ function generateLayerId(kind: LayerKind) {
 }
 
 export default function Playground() {
-  const { layers, edges, addLayer, addEdge, removeEdge, updateLayerPosition, removeLayer, applyProposedSchema, loadGraph } = useGraphStore()
+  const { layers, edges, addLayer, addEdge, removeEdge, updateLayerPosition, removeLayer, applyProposedSchema, loadGraph, undo, redo, canUndo, canRedo } = useGraphStore()
   const [hyperparams, setHyperparams] = useState<Hyperparams>(DEFAULT_HYPERPARAMS)
   const [showProposalPreview, setShowProposalPreview] = useState(false)
   const [leftCollapsed, setLeftCollapsed] = useState(false)
@@ -456,9 +456,24 @@ export default function Playground() {
         }
       }
 
-      const isCopy = (event.key === 'c' || event.key === 'C') && (event.ctrlKey || event.metaKey)
-      const isPaste = (event.key === 'v' || event.key === 'V') && (event.ctrlKey || event.metaKey)
+      const isMod = event.ctrlKey || event.metaKey
+      const isUndo = (event.key === 'z' || event.key === 'Z') && isMod && !event.shiftKey
+      const isRedo = (event.key === 'z' || event.key === 'Z') && isMod && event.shiftKey
+      const isCopy = (event.key === 'c' || event.key === 'C') && isMod
+      const isPaste = (event.key === 'v' || event.key === 'V') && isMod
       const isDeleteKey = event.key === 'Delete' || event.key === 'Backspace'
+
+      if (isUndo) {
+        event.preventDefault()
+        undo()
+        return
+      }
+
+      if (isRedo) {
+        event.preventDefault()
+        redo()
+        return
+      }
 
       if (isCopy) {
         if (selectedNodeIds.length === 1) {
@@ -528,7 +543,7 @@ export default function Playground() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [selectedNodeIds, selectedEdgeIds, layers, copiedLayer, addLayer, removeLayer, removeEdge, broadcastOp])
+  }, [selectedNodeIds, selectedEdgeIds, layers, copiedLayer, addLayer, removeLayer, removeEdge, broadcastOp, undo, redo])
 
   const handlePresetSelect = useCallback((preset: PresetType) => {
     const presetGraph = getPresetGraph(preset)
@@ -672,6 +687,25 @@ export default function Playground() {
             <GridBackground />
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            {/* Undo / Redo buttons */}
+            <div className="absolute top-3 left-3 z-10 flex gap-1">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                title="Undo (Ctrl+Z)"
+                className="w-8 h-8 rounded-lg bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                title="Redo (Ctrl+Shift+Z)"
+                className="w-8 h-8 rounded-lg bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10" /></svg>
+              </button>
+            </div>
             <AlignmentGuides />
             <ConnectionPreview />
             <CollabCursors />

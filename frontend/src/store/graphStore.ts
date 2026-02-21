@@ -3,9 +3,21 @@ import type { AnyLayer, GraphEdge, TensorShape } from '../types/graph'
 import { formatShape } from '../types/graph'
 import type { TrainingRequest } from '@/api/types'
 
+type Snapshot = { layers: Record<string, AnyLayer>; edges: GraphEdge[] }
+
 interface GraphState {
   layers: Record<string, AnyLayer>
   edges: GraphEdge[]
+
+  // Undo / Redo
+  _undoStack: Snapshot[]
+  _redoStack: Snapshot[]
+  _skipUndo: boolean
+  _pushUndo: () => void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 
   // Actions
   addLayer: (layer: AnyLayer) => void
@@ -20,6 +32,8 @@ interface GraphState {
   clearGraph: () => void
   loadGraph: (layers: Record<string, AnyLayer>, edges: GraphEdge[]) => void
 }
+
+const MAX_UNDO = 50
 
 // Compute output shape for a layer given its input shape
 function computeOutputShape(layer: AnyLayer, inputShape?: TensorShape): TensorShape {
@@ -100,7 +114,63 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   layers: {},
   edges: [],
 
+  _undoStack: [],
+  _redoStack: [],
+  _skipUndo: false,
+  canUndo: false,
+  canRedo: false,
+
+  _pushUndo: () => {
+    if (get()._skipUndo) return
+    const { layers, edges, _undoStack } = get()
+    const snapshot: Snapshot = {
+      layers: JSON.parse(JSON.stringify(layers)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    }
+    const stack = [..._undoStack, snapshot].slice(-MAX_UNDO)
+    set({ _undoStack: stack, _redoStack: [], canUndo: true, canRedo: false })
+  },
+
+  undo: () => {
+    const { _undoStack, layers, edges } = get()
+    if (_undoStack.length === 0) return
+    const prev = _undoStack[_undoStack.length - 1]
+    const currentSnapshot: Snapshot = {
+      layers: JSON.parse(JSON.stringify(layers)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    }
+    set((state) => ({
+      layers: prev.layers,
+      edges: prev.edges,
+      _undoStack: state._undoStack.slice(0, -1),
+      _redoStack: [...state._redoStack, currentSnapshot],
+      canUndo: state._undoStack.length > 1,
+      canRedo: true,
+    }))
+    get().recomputeShapes()
+  },
+
+  redo: () => {
+    const { _redoStack, layers, edges } = get()
+    if (_redoStack.length === 0) return
+    const next = _redoStack[_redoStack.length - 1]
+    const currentSnapshot: Snapshot = {
+      layers: JSON.parse(JSON.stringify(layers)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    }
+    set((state) => ({
+      layers: next.layers,
+      edges: next.edges,
+      _redoStack: state._redoStack.slice(0, -1),
+      _undoStack: [...state._undoStack, currentSnapshot],
+      canRedo: state._redoStack.length > 1,
+      canUndo: true,
+    }))
+    get().recomputeShapes()
+  },
+
   addLayer: (layer) => {
+    get()._pushUndo()
     set((state) => {
       let newLayers: Record<string, AnyLayer> = { ...state.layers, [layer.id]: layer }
       // When adding an Input layer, auto-update any existing Output layer's classes
@@ -120,15 +190,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     get().recomputeShapes()
   },
 
-  removeLayer: (id) => set((state) => {
-    const { [id]: removed, ...rest } = state.layers
-    return {
-      layers: rest as Record<string, AnyLayer>,
-      edges: state.edges.filter(e => e.source !== id && e.target !== id)
-    }
-  }),
+  removeLayer: (id) => {
+    get()._pushUndo()
+    set((state) => {
+      const { [id]: removed, ...rest } = state.layers
+      return {
+        layers: rest as Record<string, AnyLayer>,
+        edges: state.edges.filter(e => e.source !== id && e.target !== id)
+      }
+    })
+  },
 
   updateLayerParams: (id, params) => {
+    get()._pushUndo()
     set((state) => {
       const layer = state.layers[id]
       if (!layer) return state
@@ -170,6 +244,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   addEdge: (edge) => {
+    get()._pushUndo()
     const normalizeHandle = (handle?: string | null) => handle ?? null
 
     set((state) => {
@@ -194,6 +269,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   removeEdge: (id) => {
+    get()._pushUndo()
     set((state) => ({
       edges: state.edges.filter(e => e.id !== id)
     }))
@@ -257,9 +333,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   }),
 
   applyProposedSchema: (schema) => {
+    get()._pushUndo()
+    set({ _skipUndo: true })
     get().clearGraph()
     Object.values(schema.layers).forEach((layer) => {
-      const newId = layer.id // Assuming layer.id is already present in schema.layers
+      const newId = layer.id
       get().addLayer({
         ...layer,
         id: newId,
@@ -274,9 +352,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         targetHandle: edge.targetHandle ?? 'input',
       })
     })
+    set({ _skipUndo: false })
   },
 
   clearGraph: () => {
+    get()._pushUndo()
     set({
       layers: {},
       edges: []
@@ -284,6 +364,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadGraph: (layers, edges) => {
+    get()._pushUndo()
+    set({ _skipUndo: true })
+
     const normalizedLayers = Object.values(layers).map((layer) => ({
       ...layer,
       params: { ...layer.params },
@@ -308,6 +391,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     normalizedEdges.forEach((edge) => {
       get().addEdge(edge)
     })
+    set({ _skipUndo: false })
   }
 }))
 
