@@ -43,14 +43,19 @@ function HeaderButtons() {
 }
 
 function HeaderLeft() {
-  const { activeModelName, activeModelSource } = useMarketplaceStore();
-  
   return (
     <div className="flex items-center gap-4">
       <Link 
         to="/playground" 
-        onClick={() => useMarketplaceStore.getState().clearActiveModel()}
         className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => {
+          useGraphStore.getState().clearGraph();
+          useMarketplaceStore.getState().clearActiveModel();
+          import('./components/PresetChips').then(({ getPresetGraph }) => {
+            const blank = getPresetGraph('blank');
+            useGraphStore.getState().loadGraph(blank.layers, blank.edges);
+          });
+        }}
       >
         <div className="w-6 h-6 rounded bg-primary flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(139,92,246,0.3)]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -63,45 +68,6 @@ function HeaderLeft() {
         </div>
         <span className="font-semibold text-foreground text-sm tracking-wide">FigmaNN</span>
       </Link>
-      <div className="h-4 w-[1px] bg-border mx-1"></div>
-
-      <button className="flex items-center gap-1 text-sm text-foreground/80 hover:text-primary hover:bg-primary/10 px-2 py-1 rounded transition-colors font-medium">
-        File
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-
-      <button 
-        onClick={() => {
-          useGraphStore.getState().clearGraph();
-          useMarketplaceStore.getState().clearActiveModel();
-          import('./components/PresetChips').then(({ getPresetGraph }) => {
-            const blank = getPresetGraph('blank');
-            useGraphStore.getState().loadGraph(blank.layers, blank.edges);
-          });
-        }}
-        className="flex items-center gap-1.5 text-sm text-foreground/80 hover:text-primary hover:bg-primary/10 px-2.5 py-1.5 rounded transition-colors font-medium border border-transparent hover:border-primary/30 ml-1"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="12" y1="18" x2="12" y2="12"></line>
-          <line x1="9" y1="15" x2="15" y2="15"></line>
-        </svg>
-        New
-      </button>
-
-      <div className="flex items-center gap-2 group cursor-default ml-3">
-        <span className="text-[13px] font-medium text-foreground/90 relative">
-          {activeModelName ? activeModelName : "Untitled Model"}
-          {activeModelSource === 'marketplace' && (
-            <sup className="ml-1 text-[9px] font-bold text-primary uppercase tracking-wide">
-              Imported
-            </sup>
-          )}
-        </span>
-      </div>
     </div>
   );
 }
