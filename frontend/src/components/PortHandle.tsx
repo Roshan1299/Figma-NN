@@ -51,19 +51,17 @@ export function PortHandle({
     }
   }, [side])
 
-  // Color scheme based on kind and validation state
+  // Derive if this is an input
   const isInput = kind === 'input'
+
+  // Color scheme based on validation state
   const colorClass = useMemo(() => {
     if (!isValidTarget) {
       return 'text-red-500 before:bg-red-500 before:shadow-[0_0_12px_rgba(239,68,68,0.6)] hover:before:shadow-[0_0_16px_rgba(239,68,68,0.8)]'
     }
 
-    if (isInput) {
-      return 'text-cyan-500 before:bg-cyan-500 before:shadow-[0_0_12px_rgba(6,182,212,0.6)] hover:before:shadow-[0_0_20px_rgba(6,182,212,0.9)]'
-    } else {
-      return 'text-emerald-500 before:bg-emerald-500 before:shadow-[0_0_12px_rgba(34,197,94,0.6)] hover:before:shadow-[0_0_20px_rgba(34,197,94,0.9)]'
-    }
-  }, [isInput, isValidTarget])
+    return 'text-cyan-500 before:bg-cyan-500 before:shadow-[0_0_12px_rgba(6,182,212,0.6)] hover:before:shadow-[0_0_20px_rgba(6,182,212,0.9)]'
+  }, [isValidTarget])
 
   return (
     <div style={containerStyles} className={`group/port ${colorClass}`}>
