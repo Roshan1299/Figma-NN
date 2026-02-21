@@ -25,7 +25,7 @@ export function OutputLayerNode({ id, selected, data }: NodeProps) {
       <button
         type="button"
         onClick={() => removeLayer(id)}
-        className="absolute -right-2 -top-2 w-5 h-5 flex items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground text-[10px] font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+        className="absolute -right-3 -top-3 w-7 h-7 flex items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground text-[13px] font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive cursor-pointer"
       >
         ×
       </button>

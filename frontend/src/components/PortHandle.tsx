@@ -13,7 +13,6 @@ export function PortHandle({
   isValidTarget = true,
   ...props
 }: PortHandleProps) {
-  // Map side to React Flow Position
   const position = useMemo(() => {
     const posMap = {
       top: Position.Top,
@@ -24,56 +23,61 @@ export function PortHandle({
     return posMap[side]
   }, [side])
 
-  // Styling for port container (absolute positioning relative to node)
+  // Outer container — 64×64 invisible grab zone centered on the node edge
   const containerStyles: React.CSSProperties = useMemo(() => {
     const base: React.CSSProperties = {
       position: 'absolute',
-      width: '48px',
-      height: '48px',
+      width: '64px',
+      height: '64px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      cursor: 'grab',
+      cursor: 'crosshair',
+      zIndex: 10,
     }
-
-    // Position based on side
     switch (side) {
-      case 'top':
-        return { ...base, top: '-24px', left: '50%', transform: 'translateX(-50%)' }
-      case 'bottom':
-        return { ...base, bottom: '-24px', left: '50%', transform: 'translateX(-50%)' }
-      case 'left':
-        return { ...base, left: '-24px', top: '50%', transform: 'translateY(-50%)' }
-      case 'right':
-        return { ...base, right: '-24px', top: '50%', transform: 'translateY(-50%)' }
-      default:
-        return base
+      case 'top':    return { ...base, top: '-32px',  left: '50%', transform: 'translateX(-50%)' }
+      case 'bottom': return { ...base, bottom: '-32px', left: '50%', transform: 'translateX(-50%)' }
+      case 'left':   return { ...base, left: '-32px',  top: '50%',  transform: 'translateY(-50%)' }
+      case 'right':  return { ...base, right: '-32px', top: '50%',  transform: 'translateY(-50%)' }
+      default:       return base
     }
   }, [side])
 
-  // Derive if this is an input
+  const ringColor = isValidTarget
+    ? 'border-cyan-500'
+    : 'border-red-500'
+
+  const glowColor = isValidTarget
+    ? 'group-hover/port:shadow-[0_0_14px_rgba(6,182,212,0.85)]'
+    : 'group-hover/port:shadow-[0_0_14px_rgba(239,68,68,0.85)]'
+
+  const bgGlow = isValidTarget
+    ? 'group-hover/port:bg-cyan-400/20'
+    : 'group-hover/port:bg-red-400/20'
+
   const isInput = kind === 'input'
 
-  // Color scheme based on validation state
-  const colorClass = useMemo(() => {
-    if (!isValidTarget) {
-      return 'text-red-500 before:bg-red-500 before:shadow-[0_0_12px_rgba(239,68,68,0.6)] hover:before:shadow-[0_0_16px_rgba(239,68,68,0.8)]'
-    }
-
-    return 'text-cyan-500 before:bg-cyan-500 before:shadow-[0_0_12px_rgba(6,182,212,0.6)] hover:before:shadow-[0_0_20px_rgba(6,182,212,0.9)]'
-  }, [isValidTarget])
-
   return (
-    <div style={containerStyles} className={`group/port ${colorClass}`}>
-      {/* Invisible large hit target for dragging */}
-      <div className="absolute inset-0 rounded-full opacity-0 hover:opacity-10 bg-current transition-opacity" />
+    <div style={containerStyles} className="group/port">
+      {/* Subtle radial glow fills the whole grab zone on hover */}
+      <div className={`absolute inset-0 rounded-full transition-colors duration-150 ${bgGlow}`} />
 
-      {/* Visible port circle "tip" with centered Handle for connection lines */}
-      <div className="relative w-4 h-4 rounded-full before:absolute before:inset-0 before:rounded-full before:border-2 before:border-cyan-500 before:transition-all before:duration-200 group-hover/port:before:scale-125">
+      {/* Dot — the Handle lives inside here so the edge connects right at the dot center */}
+      <div
+        className={`
+          relative w-[18px] h-[18px] rounded-full border-2 ${ringColor}
+          bg-[#0a0a0a]
+          transition-all duration-150
+          group-hover/port:scale-125 ${glowColor}
+          group-hover/port:border-opacity-100
+        `}
+      >
         <Handle
           type={isInput ? 'target' : 'source'}
           position={position}
-          className="w-full h-full opacity-0"
+          className="absolute inset-0 opacity-0 rounded-full w-full h-full"
+          style={{ minWidth: 'unset', minHeight: 'unset' }}
           {...props}
         />
       </div>

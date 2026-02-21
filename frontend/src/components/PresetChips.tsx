@@ -68,13 +68,13 @@ export function getPresetGraph(preset: PresetType): {
             id: 'flatten-1',
             kind: 'Flatten',
             params: {},
-            position: { x: 300, y: 200 },
+            position: { x: 430, y: 200 },
           },
           'output-1': {
             id: 'output-1',
             kind: 'Output',
             params: { classes: 10, activation: 'softmax' }, // Default to MNIST classes
-            position: { x: 550, y: 200 },
+            position: { x: 810, y: 200 },
           },
         },
         edges: [
@@ -96,19 +96,19 @@ export function getPresetGraph(preset: PresetType): {
             id: 'flatten-1',
             kind: 'Flatten',
             params: {},
-            position: { x: 300, y: 200 },
+            position: { x: 430, y: 200 },
           },
           'dense-1': {
             id: 'dense-1',
             kind: 'Dense',
             params: { units: 128, activation: 'relu' },
-            position: { x: 550, y: 200 },
+            position: { x: 810, y: 200 },
           },
           'output-1': {
             id: 'output-1',
             kind: 'Output',
             params: { classes: 10, activation: 'softmax' }, // Default to MNIST classes
-            position: { x: 800, y: 200 },
+            position: { x: 1190, y: 200 },
           },
         },
         edges: [
@@ -131,49 +131,49 @@ export function getPresetGraph(preset: PresetType): {
             id: 'conv-1',
             kind: 'Convolution',
             params: { filters: 32, kernel: 3, stride: 1, padding: 'same', activation: 'relu' },
-            position: { x: 300, y: 200 },
+            position: { x: 430, y: 200 },
           },
           'pool-1': {
             id: 'pool-1',
             kind: 'Pooling',
             params: { type: 'max', pool_size: 2, stride: 2, padding: 0 },
-            position: { x: 550, y: 200 },
+            position: { x: 810, y: 200 },
           },
           'conv-2': {
             id: 'conv-2',
             kind: 'Convolution',
             params: { filters: 64, kernel: 3, stride: 1, padding: 'same', activation: 'relu' },
-            position: { x: 800, y: 200 },
+            position: { x: 1190, y: 200 },
           },
           'pool-2': {
             id: 'pool-2',
             kind: 'Pooling',
             params: { type: 'max', pool_size: 2, stride: 2, padding: 0 },
-            position: { x: 1050, y: 200 },
+            position: { x: 1570, y: 200 },
           },
           'flatten-1': {
             id: 'flatten-1',
             kind: 'Flatten',
             params: {},
-            position: { x: 1300, y: 200 },
+            position: { x: 1950, y: 200 },
           },
           'dense-1': {
             id: 'dense-1',
             kind: 'Dense',
             params: { units: 128, activation: 'relu' },
-            position: { x: 1550, y: 200 },
+            position: { x: 2330, y: 200 },
           },
           'dropout-1': {
             id: 'dropout-1',
             kind: 'Dropout',
             params: { rate: 0.5 },
-            position: { x: 1800, y: 200 },
+            position: { x: 2710, y: 200 },
           },
           'output-1': {
             id: 'output-1',
             kind: 'Output',
             params: { classes: 10, activation: 'softmax' }, // Default to MNIST classes
-            position: { x: 2050, y: 200 },
+            position: { x: 3090, y: 200 },
           },
         },
         edges: [
