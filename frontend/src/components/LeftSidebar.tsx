@@ -13,6 +13,8 @@ const LAYER_ICONS: Record<string, (color: string) => React.ReactNode> = {
   flatten: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
   dropout: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><line x1="9" y1="6" x2="15" y2="6" strokeDasharray="3 2"/><line x1="9" y1="18" x2="15" y2="18" strokeDasharray="3 2"/></svg>,
   softmax: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/></svg>,
+  batchnorm: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l3-9 6 18 3-9h4" /></svg>,
+  residualblock: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h16" /><path d="M4 12c0-4 4-7 8-7s8 3 8 7" /><polyline points="16 9 20 12 16 15" /></svg>,
 }
 
 const LAYER_GROUPS = [
@@ -27,6 +29,7 @@ const LAYER_GROUPS = [
     name: 'Convolution',
     items: [
       { id: 'conv2d', label: 'Conv2D', subtext: '2D convolution', kind: 'Convolution', params: { filters: 32, kernel: 3, stride: 1, padding: 'same', activation: 'relu' }, iconColor: '#3b82f6' },
+      { id: 'residualblock', label: 'Residual Block', subtext: 'Conv + skip connection', kind: 'ResidualBlock', params: { filters: 64, kernel: 3 }, iconColor: '#a855f7' },
     ]
   },
   {
@@ -40,6 +43,7 @@ const LAYER_GROUPS = [
     items: [
       { id: 'dense', label: 'Dense', subtext: 'Fully connected', kind: 'Dense', params: { units: 128, activation: 'relu' }, iconColor: '#ef4444' },
       { id: 'flatten', label: 'Flatten', subtext: 'Flatten to 1D', kind: 'Flatten', params: {}, iconColor: '#f97316' },
+      { id: 'batchnorm', label: 'Batch Norm', subtext: 'Normalize activations', kind: 'BatchNorm', params: {}, iconColor: '#14b8a6' },
       { id: 'dropout', label: 'Dropout', subtext: 'Prevent overfitting', kind: 'Dropout', params: { rate: 0.2 }, iconColor: '#f43f5e' },
       { id: 'softmax', label: 'Softmax Output', subtext: 'Classification head', kind: 'Output', params: { classes: 26, activation: 'softmax' }, iconColor: '#eab308' },
     ]

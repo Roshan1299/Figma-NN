@@ -176,6 +176,32 @@ export function generatePyTorchCode(
       continue
     }
 
+    if (layer.kind === 'BatchNorm') {
+      const i = cnt('bn')
+      const name = `bn${i}`
+      if (shape.type === 'image') {
+        initLines.push(`        self.${name} = nn.BatchNorm2d(${(shape as Extract<Shape, { type: 'image' }>).channels})`)
+      } else if (shape.type === 'vector') {
+        initLines.push(`        self.${name} = nn.BatchNorm1d(${(shape as Extract<Shape, { type: 'vector' }>).size})`)
+      }
+      fwdLines.push(`        x = self.${name}(x)`)
+      continue
+    }
+
+    if (layer.kind === 'ResidualBlock') {
+      if (shape.type !== 'image') continue
+      const s = shape as Extract<Shape, { type: 'image' }>
+      const { filters, kernel } = layer.params
+      const k = kernel ?? 3
+      const pad = Math.floor(k / 2)
+      const i = cnt('resblock')
+      const name = `resblock${i}`
+      initLines.push(`        self.${name} = ResidualBlock(${s.channels}, ${filters}, kernel_size=${k})`)
+      fwdLines.push(`        x = self.${name}(x)`)
+      shape = { type: 'image', channels: filters, height: s.height, width: s.width }
+      continue
+    }
+
     if (layer.kind === 'Output') {
       ensureFlat()
       const inF = (shape as Extract<Shape, { type: 'vector' }>).size
@@ -188,6 +214,8 @@ export function generatePyTorchCode(
       continue
     }
   }
+
+  const hasResBlock = counters['resblock'] > 0
 
   // If no return was added yet
   if (!fwdLines.some(l => l.includes('return'))) {
@@ -242,7 +270,26 @@ transform = transforms.Compose([
     transforms.Normalize((0.5,), (0.5,)),
 ])
 ${datasetBlock ? '\n' + datasetBlock + '\n' : ''}
+${hasResBlock ? `
 
+# ── Residual Block ───────────────────────────────────
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3):
+        super().__init__()
+        padding = kernel_size // 2
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.skip = nn.Conv2d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        identity = self.skip(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        return self.relu(out + identity)
+` : ''}
 
 # ── Model ─────────────────────────────────────────────
 class NeuralNetwork(nn.Module):

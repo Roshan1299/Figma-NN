@@ -292,6 +292,29 @@ def validate_architecture(payload, dataset_type="mnist"):
                 raise ValueError("Dropout probability must be between 0 and 1.")
             sanitized_layers.append({"type": "dropout", "p": rate})
 
+        elif layer_type in {"batchnorm2d", "batchnorm1d"}:
+            num_features = int(layer.get("num_features", 1))
+            sanitized_layers.append({"type": layer_type, "num_features": num_features})
+
+        elif layer_type == "residual_block":
+            if current_shape["mode"] != "image":
+                raise ValueError("ResidualBlock requires image (CHW) input.")
+            in_ch = int(layer.get("in_channels", current_shape["channels"]))
+            out_ch = int(layer.get("out_channels", 64))
+            ks = int(layer.get("kernel_size", 3))
+            sanitized_layers.append({
+                "type": "residual_block",
+                "in_channels": in_ch,
+                "out_channels": out_ch,
+                "kernel_size": ks,
+            })
+            current_shape = {
+                "mode": "image",
+                "channels": out_ch,
+                "height": current_shape["height"],
+                "width": current_shape["width"],
+            }
+
         elif layer_type in {"relu", "sigmoid", "tanh", "softmax"}:
             sanitized_layers.append({"type": layer_type})
 

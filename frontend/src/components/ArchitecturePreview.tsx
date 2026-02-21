@@ -19,9 +19,12 @@ const LAYER_STYLE: Record<string, { label: string; bg: string; border: string; t
   maxpool2d: { label: 'Pool',    bg: 'bg-blue-500/20',   border: 'border-blue-500/40',   text: 'text-blue-300' },
   linear:    { label: 'Dense',   bg: 'bg-red-500/20',    border: 'border-red-500/40',     text: 'text-red-300' },
   flatten:   { label: 'Flat',    bg: 'bg-amber-500/20',  border: 'border-amber-500/40',   text: 'text-amber-300' },
-  dropout:   { label: 'Drop',    bg: 'bg-gray-500/20',   border: 'border-gray-500/40',    text: 'text-gray-300' },
-  relu:      { label: 'ReLU',    bg: 'bg-green-500/15',  border: 'border-green-500/30',   text: 'text-green-400' },
-  softmax:   { label: 'Soft',    bg: 'bg-cyan-500/15',   border: 'border-cyan-500/30',    text: 'text-cyan-400' },
+  dropout:     { label: 'Drop',    bg: 'bg-gray-500/20',   border: 'border-gray-500/40',    text: 'text-gray-300' },
+  batchnorm2d: { label: 'BN',     bg: 'bg-teal-500/20',   border: 'border-teal-500/40',    text: 'text-teal-300' },
+  batchnorm1d: { label: 'BN',     bg: 'bg-teal-500/20',   border: 'border-teal-500/40',    text: 'text-teal-300' },
+  residual_block: { label: 'Res', bg: 'bg-purple-500/20', border: 'border-purple-500/40', text: 'text-purple-300' },
+  relu:        { label: 'ReLU',   bg: 'bg-green-500/15',  border: 'border-green-500/30',   text: 'text-green-400' },
+  softmax:     { label: 'Soft',   bg: 'bg-cyan-500/15',   border: 'border-cyan-500/30',    text: 'text-cyan-400' },
 }
 
 function getStyle(type: string) {

@@ -15,6 +15,25 @@ MNIST_DATA_ROOT = SERVICES_DIR / "data" / "mnist"
 EMNIST_DATA_ROOT = BACKEND_DIR / "data" / "mnist"  # EMNIST is stored under backend/data/mnist/EMNIST/
 
 
+class ResidualBlock(nn.Module):
+    """Conv → BN → ReLU → Conv → BN + skip connection → ReLU"""
+    def __init__(self, in_channels, out_channels, kernel_size=3):
+        super().__init__()
+        padding = kernel_size // 2
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.skip = nn.Conv2d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        identity = self.skip(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        return self.relu(out + identity)
+
+
 def build_model(architecture):
     layers = []
     for layer_spec in architecture["layers"]:
@@ -46,6 +65,12 @@ def build_model(architecture):
         elif layer_type == "dropout":
             p = float(layer_spec.get("p", layer_spec.get("rate", 0.5)))
             layers.append(nn.Dropout(p=p))
+        elif layer_type == "batchnorm2d":
+            num_features = int(layer_spec.get("num_features", 1))
+            layers.append(nn.BatchNorm2d(num_features))
+        elif layer_type == "batchnorm1d":
+            num_features = int(layer_spec.get("num_features", 1))
+            layers.append(nn.BatchNorm1d(num_features))
         elif layer_type == "flatten":
             layers.append(nn.Flatten())
         elif layer_type == "relu":
@@ -56,6 +81,11 @@ def build_model(architecture):
             layers.append(nn.Tanh())
         elif layer_type == "softmax":
             layers.append(nn.Softmax(dim=1))
+        elif layer_type == "residual_block":
+            in_ch = int(layer_spec.get("in_channels", 1))
+            out_ch = int(layer_spec.get("out_channels", 64))
+            ks = int(layer_spec.get("kernel_size", 3))
+            layers.append(ResidualBlock(in_ch, out_ch, kernel_size=ks))
         else:
             raise ValueError(f"Unsupported layer type `{layer_type}`.")
     return nn.Sequential(*layers)
