@@ -94,13 +94,25 @@ def _model_file_path(model_id: str) -> Path:
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", logger=False, engineio_logger=False, manage_session=False, ping_timeout=5, ping_interval=5)
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*", 
+    async_mode="threading", 
+    logger=False, 
+    engineio_logger=False, 
+    manage_session=False, 
+    ping_timeout=5, 
+    ping_interval=5,
+    allow_upgrades=True
+)
 collab.register_handlers(socketio)
 
 # Register blueprints
 
 app.register_blueprint(model_bp)
 app.register_blueprint(chat_bp)
+from controllers.marketplace_controller import marketplace_bp
+app.register_blueprint(marketplace_bp)
 
 
 def _generate_id(prefix: str) -> str:

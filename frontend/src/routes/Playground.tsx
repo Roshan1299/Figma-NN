@@ -20,7 +20,7 @@ import { OutputLayerNode } from '@/components/nodes/OutputLayerNode'
 import { PoolingLayerNode } from '@/components/nodes/PoolingLayerNode'
 import { FlattenLayerNode } from '@/components/nodes/FlattenLayerNode'
 import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
-import { HyperparamsPanel, type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
+import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { useTrainingMetrics } from '@/hooks/useTraining'
 import { LeftSidebar } from '@/components/LeftSidebar'
@@ -30,9 +30,11 @@ import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
 import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
-import { PresetChips, getPresetGraph, type PresetType } from '@/components/PresetChips'
+import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
+import { useMarketplaceStore } from '@/store/marketplaceStore'
+import { parseArchitectureToGraph } from '@/lib/architectureParser'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -500,7 +502,6 @@ export default function Playground() {
     const presetGraph = getPresetGraph(preset)
     loadGraph(presetGraph.layers, presetGraph.edges)
     broadcastOp({ op_type: 'load_graph', payload: { layers: presetGraph.layers, edges: presetGraph.edges } })
-    setCurrentPreset(preset)
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
     }
@@ -513,8 +514,24 @@ export default function Playground() {
     }
   }, [layers, edges])
 
+  const { importedArchitecture, clearImportedArchitecture } = useMarketplaceStore()
+
   useEffect(() => {
-    if (Object.keys(layers).length === 0) {
+    if (importedArchitecture) {
+      try {
+        const parsedLayout = parseArchitectureToGraph(importedArchitecture);
+        loadGraph(parsedLayout.layers, parsedLayout.edges);
+        clearImportedArchitecture();
+        if (reactFlowInstance) {
+          setTimeout(() => {
+             reactFlowInstance.fitView({ padding: 0.1, duration: 500 });
+          }, 100);
+        }
+      } catch (e) {
+        console.error("Failed to parse imported architecture:", e);
+        clearImportedArchitecture();
+      }
+    } else if (Object.keys(layers).length === 0) {
       const blankPreset = getPresetGraph('blank')
       loadGraph(blankPreset.layers, blankPreset.edges)
       if (reactFlowInstance) {

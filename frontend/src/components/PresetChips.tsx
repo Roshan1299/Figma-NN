@@ -64,15 +64,22 @@ export function getPresetGraph(preset: PresetType): {
             params: { size: 784, channels: 1, height: 28, width: 28, dataset: 'mnist' },
             position: { x: 50, y: 200 },
           },
+          'flatten-1': {
+            id: 'flatten-1',
+            kind: 'Flatten',
+            params: {},
+            position: { x: 300, y: 200 },
+          },
           'output-1': {
             id: 'output-1',
             kind: 'Output',
             params: { classes: 10, activation: 'softmax' }, // Default to MNIST classes
-            position: { x: 350, y: 200 },
+            position: { x: 550, y: 200 },
           },
         },
         edges: [
-          makeEdge('input-1-output-1', 'input-1', 'output-1'),
+          makeEdge('input-1-flatten-1', 'input-1', 'flatten-1'),
+          makeEdge('flatten-1-output-1', 'flatten-1', 'output-1'),
         ],
       }
 
