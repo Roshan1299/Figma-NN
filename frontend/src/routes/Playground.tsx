@@ -34,6 +34,7 @@ import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 import { ConnectionPreview } from '@/components/ConnectionPreview'
+import { GridBackground } from '@/components/GridBackground'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -623,6 +624,7 @@ export default function Playground() {
             onInit={setReactFlowInstance}
             className="bg-background [&_.react-flow__pane]:bg-transparent"
           >
+            <GridBackground />
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
             <ConnectionPreview />
