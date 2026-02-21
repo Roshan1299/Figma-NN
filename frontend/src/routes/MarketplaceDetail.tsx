@@ -36,7 +36,7 @@ export default function MarketplaceDetail() {
     if (model) {
       setImportedArchitecture(model.architecture);
       setActiveModel(model.name, 'marketplace');
-      navigate('/playground'); // Navigate to the main builder
+      navigate(`/playground/${id}`); // Navigate to the main builder with the imported model's ID
     }
   };
 
