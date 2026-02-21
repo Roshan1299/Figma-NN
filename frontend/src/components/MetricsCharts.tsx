@@ -79,13 +79,13 @@ export const MetricsCharts: FC<MetricsChartsProps> = memo(({ metrics }) => {
                 formatter={(v: number) => `${(v * 100).toFixed(2)}%`}
               />
               <Line type="monotone" dataKey="train_accuracy" stroke="#34d399" name="Train" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              <Line type="monotone" dataKey="val_accuracy" stroke="#a78bfa" name="Val" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="val_accuracy" stroke="#22d3ee" name="Val" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div className="flex gap-4 mt-1 pl-1">
           <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: '#34d399' }} /><span className="text-[10px] text-muted-foreground">Train</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: '#a78bfa' }} /><span className="text-[10px] text-muted-foreground">Val</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: '#22d3ee' }} /><span className="text-[10px] text-muted-foreground">Val</span></div>
         </div>
       </div>
     </div>

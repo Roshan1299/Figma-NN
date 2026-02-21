@@ -32,7 +32,7 @@ const LAYER_GROUPS = [
   {
     name: 'Pooling',
     items: [
-      { id: 'maxpool2d', label: 'MaxPool2D', subtext: 'Max pooling 2D', kind: 'Pooling', params: { type: 'max', pool_size: 2, stride: 2, padding: 0 }, iconColor: '#a855f7' },
+      { id: 'maxpool2d', label: 'MaxPool2D', subtext: 'Max pooling 2D', kind: 'Pooling', params: { type: 'max', pool_size: 2, stride: 2, padding: 0 }, iconColor: '#06b6d4' },
     ]
   },
   {

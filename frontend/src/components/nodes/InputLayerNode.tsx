@@ -9,7 +9,7 @@ export function InputLayerNode({ id, selected }: NodeProps) {
   if (!layer) return null;
 
   return (
-    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
+    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
       <div className="w-8 h-8 rounded bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
       </div>

@@ -9,7 +9,7 @@ export function DenseLayerNode({ id, selected }: NodeProps) {
   if (!layer) return null
 
   return (
-    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
+    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
       <div className="w-8 h-8 rounded bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       </div>

@@ -40,7 +40,7 @@ function CfgInput({ value, onChange, type = 'number', min, max, step }: {
           if (!isNaN(v)) onChange(v)
         } else onChange(e.target.value)
       }}
-      className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-mono text-white outline-none focus:ring-1 focus:ring-violet-500/40 transition-all text-right"
+      className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-mono text-white outline-none focus:ring-1 focus:ring-cyan-500/40 transition-all text-right"
       style={{ background: '#1c1c1e', border: '1px solid #2a2a2e' }}
     />
   )
@@ -53,7 +53,7 @@ function CfgSelect({ value, onChange, options }: {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="w-20 rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-violet-500/40 transition-all text-right"
+      className="w-20 rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-cyan-500/40 transition-all text-right"
       style={{ background: '#1c1c1e', border: '1px solid #2a2a2e' }}
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -148,9 +148,9 @@ function ConfigTab({ onParamsChange, onPresetSelect }: {
             onClick={() => set('shuffle', !params.shuffle)}
             className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-all text-right"
             style={{
-              background: params.shuffle ? '#2d1b69' : '#1c1c1e',
-              border: `1px solid ${params.shuffle ? '#7c3aed44' : '#2a2a2e'}`,
-              color: params.shuffle ? '#a78bfa' : '#555',
+              background: params.shuffle ? '#0c2d3e' : '#1c1c1e',
+              border: `1px solid ${params.shuffle ? '#0891b244' : '#2a2a2e'}`,
+              color: params.shuffle ? '#22d3ee' : '#555',
             }}
           >
             {params.shuffle ? 'On' : 'Off'}
@@ -195,7 +195,7 @@ export function BottomDrawer({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
             style={
               activeTab === tab.id
-                ? { background: '#1c1c2e', color: '#a78bfa' }
+                ? { background: '#0c1f2e', color: '#22d3ee' }
                 : { color: '#555' }
             }
           >
@@ -237,7 +237,7 @@ export function BottomDrawer({
             <div className="flex h-full gap-6 p-4 overflow-hidden">
               <div className="flex flex-col gap-3">
                 <div className="flex gap-2">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium" style={{ background: '#7c3aed', color: '#fff' }}>
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium" style={{ background: '#0891b2', color: '#fff' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>
                     Brush
                   </button>
@@ -260,13 +260,13 @@ export function BottomDrawer({
                   <span className="text-[11px] font-medium mb-2" style={{ color: '#555' }}>Quick Test</span>
                   <div className="grid grid-cols-3 gap-1.5">
                     {['A','B','C','D','E','F','G','H','I'].map(c => (
-                      <button key={c} className="w-7 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors hover:text-violet-400" style={{ border: '1px solid #1e1e2e', background: '#111', color: '#555' }}>{c}</button>
+                      <button key={c} className="w-7 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors hover:text-cyan-400" style={{ border: '1px solid #1e1e2e', background: '#111', color: '#555' }}>{c}</button>
                     ))}
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #2a1f4a', background: '#100d1a' }}>
                   <span className="text-[10px] mb-1" style={{ color: '#555' }}>Prediction</span>
-                  <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#a78bfa' }}>A</span>
+                  <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#22d3ee' }}>A</span>
                   <span className="text-[10px]" style={{ color: '#555' }}>Conf: <span style={{ color: '#34d399' }}>92%</span></span>
                 </div>
               </div>
