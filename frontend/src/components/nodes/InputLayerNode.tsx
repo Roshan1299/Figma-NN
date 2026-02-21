@@ -1,7 +1,7 @@
-import { Position, type NodeProps } from '@xyflow/react';
+import { type NodeProps } from '@xyflow/react';
 import { useGraphStore } from '../../store/graphStore';
 import type { InputLayer } from '../../types/graph';
-import { CustomHandle } from '../CustomHandle';
+import { PortHandle } from '../PortHandle';
 
 export function InputLayerNode({ id, selected, data }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as InputLayer | undefined;
@@ -34,7 +34,8 @@ export function InputLayerNode({ id, selected, data }: NodeProps) {
         ×
       </button>
 
-      <CustomHandle type="source" position={Position.Bottom} id="output" label="Output" />
+      {/* External port - output only */}
+      <PortHandle side="right" kind="output" id="output" />
     </div>
   );
 }

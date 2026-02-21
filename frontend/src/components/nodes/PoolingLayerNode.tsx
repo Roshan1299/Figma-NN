@@ -1,7 +1,7 @@
-import { Position, type NodeProps } from '@xyflow/react'
+import { type NodeProps } from '@xyflow/react'
 import { useGraphStore } from '@/store/graphStore'
 import type { PoolingLayer } from '@/types/graph'
-import { CustomHandle } from '../CustomHandle'
+import { PortHandle } from '../PortHandle'
 
 export function PoolingLayerNode({ id, selected, data }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as PoolingLayer | undefined
@@ -34,8 +34,9 @@ export function PoolingLayerNode({ id, selected, data }: NodeProps) {
         ×
       </button>
 
-      <CustomHandle type="target" position={Position.Top} id="input" label="Input" />
-      <CustomHandle type="source" position={Position.Bottom} id="output" label="Output" />
+      {/* External ports */}
+      <PortHandle side="left" kind="input" id="input" />
+      <PortHandle side="right" kind="output" id="output" />
     </div>
   )
 }
