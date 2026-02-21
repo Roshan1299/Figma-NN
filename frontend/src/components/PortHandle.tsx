@@ -65,19 +65,18 @@ export function PortHandle({
 
   return (
     <div style={containerStyles} className={`group/port ${colorClass}`}>
-      {/* Invisible large hit target */}
+      {/* Invisible large hit target for dragging */}
       <div className="absolute inset-0 rounded-full opacity-0 hover:opacity-10 bg-current transition-opacity" />
 
-      {/* Visible port circle "tip" */}
-      <div className="relative w-4 h-4 rounded-full before:absolute before:inset-0 before:rounded-full before:border-2 before:border-cyan-500 before:transition-all before:duration-200 group-hover/port:before:scale-125" />
-
-      {/* Large invisible Handle for reliable drag detection */}
-      <Handle
-        type={isInput ? 'target' : 'source'}
-        position={position}
-        className="w-12 h-12 opacity-0"
-        {...props}
-      />
+      {/* Visible port circle "tip" with centered Handle for connection lines */}
+      <div className="relative w-4 h-4 rounded-full before:absolute before:inset-0 before:rounded-full before:border-2 before:border-cyan-500 before:transition-all before:duration-200 group-hover/port:before:scale-125">
+        <Handle
+          type={isInput ? 'target' : 'source'}
+          position={position}
+          className="w-full h-full opacity-0"
+          {...props}
+        />
+      </div>
     </div>
   )
 }
