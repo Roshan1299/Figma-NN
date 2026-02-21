@@ -181,13 +181,13 @@ export function BottomDrawer({
       className="absolute bottom-0 left-0 right-0 flex flex-col z-20 transition-all duration-200"
       style={{
         height: collapsed ? 40 : 220,
-        background: '#0d0d10',
-        borderTop: '1px solid #1e1e2e',
+        background: '#0a0a0a',
+        borderTop: '1px solid #1e1e1e',
         boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
       }}
     >
       {/* Header */}
-      <div className="flex items-center h-10 px-2 gap-1 shrink-0" style={{ borderBottom: collapsed ? 'none' : '1px solid #1e1e2e' }}>
+      <div className="flex items-center h-10 px-2 gap-1 shrink-0" style={{ borderBottom: collapsed ? 'none' : '1px solid #1e1e1e' }}>
         {!collapsed && TABS.map(tab => (
           <button
             key={tab.id}
@@ -250,21 +250,21 @@ export function BottomDrawer({
                     Clear
                   </button>
                 </div>
-                <div className="flex-1 w-[180px] rounded-lg flex items-center justify-center" style={{ border: '1px solid #1e1e2e', background: '#0a0a0a' }}>
+                <div className="flex-1 w-[180px] rounded-lg flex items-center justify-center" style={{ border: '1px solid #1e1e1e', background: '#0a0a0a' }}>
                   <span className="text-[11px]" style={{ color: '#333' }}>Canvas area</span>
                 </div>
               </div>
-              <div className="w-px" style={{ background: '#1e1e2e' }} />
+              <div className="w-px" style={{ background: '#1e1e1e' }} />
               <div className="flex gap-6 px-2 h-full items-center">
                 <div className="flex flex-col">
                   <span className="text-[11px] font-medium mb-2" style={{ color: '#555' }}>Quick Test</span>
                   <div className="grid grid-cols-3 gap-1.5">
                     {['A','B','C','D','E','F','G','H','I'].map(c => (
-                      <button key={c} className="w-7 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors hover:text-cyan-400" style={{ border: '1px solid #1e1e2e', background: '#111', color: '#555' }}>{c}</button>
+                      <button key={c} className="w-7 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors hover:text-cyan-400" style={{ border: '1px solid #1e1e1e', background: '#111', color: '#555' }}>{c}</button>
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #2a1f4a', background: '#100d1a' }}>
+                <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #1e1e1e', background: '#0a0a0a' }}>
                   <span className="text-[10px] mb-1" style={{ color: '#555' }}>Prediction</span>
                   <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#22d3ee' }}>A</span>
                   <span className="text-[10px]" style={{ color: '#555' }}>Conf: <span style={{ color: '#34d399' }}>92%</span></span>
