@@ -146,7 +146,8 @@ export function generatePyTorchCode(
       const { pool_size, stride, padding } = layer.params
       const i = cnt('pool')
       const name = `pool${i}`
-      initLines.push(`        self.${name} = nn.MaxPool2d(kernel_size=${pool_size}, stride=${stride})`)
+      const padVal = padding ?? 0
+      initLines.push(`        self.${name} = nn.MaxPool2d(kernel_size=${pool_size}, stride=${stride}${padVal > 0 ? `, padding=${padVal}` : ''})`)
       fwdLines.push(`        x = self.${name}(x)`)
       const outH = poolOutputDim(s.height, pool_size, stride, padding ?? 0)
       const outW = poolOutputDim(s.width, pool_size, stride, padding ?? 0)
@@ -207,8 +208,27 @@ export function generatePyTorchCode(
       ? `torch.optim.RMSprop(model.parameters(), lr=${lr})`
       : `torch.optim.Adam(model.parameters(), lr=${lr})`
 
-  const datasetImport = isEmnist
-    ? `datasets.EMNIST(root="./data", split="letters", train=True, download=True, transform=transform)`
+  const datasetBlock = isEmnist
+    ? `from torch.utils.data import Dataset
+
+class EMNISTLetters(Dataset):
+    """EMNIST Letters with corrected labels (0-25) and transposed images."""
+    def __init__(self, train=True):
+        self.dataset = datasets.EMNIST(
+            root="./data", split="letters", train=train, download=True, transform=transform
+        )
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        image, label = self.dataset[idx]
+        image = torch.transpose(image, 1, 2)  # Fix EMNIST rotation
+        return image, label - 1               # Remap 1-26 → 0-25`
+    : null
+
+  const datasetInit = isEmnist
+    ? `EMNISTLetters(train=True)`
     : `datasets.MNIST(root="./data", train=True, download=True, transform=transform)`
 
   return `import torch
@@ -221,6 +241,7 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,)),
 ])
+${datasetBlock ? '\n' + datasetBlock + '\n' : ''}
 
 
 # ── Model ─────────────────────────────────────────────
@@ -260,7 +281,7 @@ def train(model, loader, optimizer, criterion, epochs=${epochs}):
 
 # ── Run ───────────────────────────────────────────────
 if __name__ == "__main__":
-    train_data = ${datasetImport}
+    train_data = ${datasetInit}
     loader = DataLoader(train_data, batch_size=${batchSize}, shuffle=True)
     train(model, loader, optimizer, criterion)
 `

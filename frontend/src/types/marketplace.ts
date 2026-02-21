@@ -5,11 +5,11 @@ export interface MarketplaceModelSummary {
   tags: string[];
   authorName: string;
   createdAt: string;
+  architecture: Record<string, any>;
+  previewImage: string | null;
 }
 
-export interface MarketplaceModelDetail extends MarketplaceModelSummary {
-  architecture: Record<string, any>;
-}
+export type MarketplaceModelDetail = MarketplaceModelSummary;
 
 export interface CreateMarketplaceModelRequest {
   name: string;
@@ -17,4 +17,5 @@ export interface CreateMarketplaceModelRequest {
   tags: string[];
   authorName: string;
   architecture: Record<string, any>;
+  previewImage?: string;
 }
