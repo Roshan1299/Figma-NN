@@ -40,7 +40,7 @@ export function validateConnection(
     };
   }
 
-  if (targetLayer.kind === 'Convolution' || targetLayer.kind === 'Pooling') {
+  if (targetLayer.kind === 'Convolution' || targetLayer.kind === 'Pooling' || targetLayer.kind === 'ResidualBlock') {
     if (sourceLayer.kind === 'Dense') {
       return {
         valid: false,

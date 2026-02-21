@@ -20,6 +20,8 @@ import { OutputLayerNode } from '@/components/nodes/OutputLayerNode'
 import { PoolingLayerNode } from '@/components/nodes/PoolingLayerNode'
 import { FlattenLayerNode } from '@/components/nodes/FlattenLayerNode'
 import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
+import { BatchNormLayerNode } from '@/components/nodes/BatchNormLayerNode'
+import { ResidualBlockLayerNode } from '@/components/nodes/ResidualBlockLayerNode'
 import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { useTrainingMetrics } from '@/hooks/useTraining'
@@ -46,6 +48,8 @@ const nodeTypes: NodeTypes = {
   pool: PoolingLayerNode,
   flatten: FlattenLayerNode,
   dropout: DropoutLayerNode,
+  batchnorm: BatchNormLayerNode,
+  residualblock: ResidualBlockLayerNode,
   output: OutputLayerNode,
 };
 
@@ -56,6 +60,8 @@ const layerKindToNodeType: Record<LayerKind, keyof typeof nodeTypes> = {
   Pooling: 'pool',
   Flatten: 'flatten',
   Dropout: 'dropout',
+  BatchNorm: 'batchnorm',
+  ResidualBlock: 'residualblock',
   Output: 'output',
 }
 
@@ -66,10 +72,12 @@ const layerIdPrefixes: Record<LayerKind, string> = {
   Pooling: 'pool',
   Flatten: 'flatten',
   Dropout: 'dropout',
+  BatchNorm: 'batchnorm',
+  ResidualBlock: 'resblock',
   Output: 'output',
 }
 
-const duplicableLayerKinds = new Set<LayerKind>(['Dense', 'Convolution', 'Pooling', 'Dropout', 'Flatten'])
+const duplicableLayerKinds = new Set<LayerKind>(['Dense', 'Convolution', 'Pooling', 'Dropout', 'Flatten', 'BatchNorm', 'ResidualBlock'])
 
 // ── Train Bar component ───────────────────────────────────────────────────────
 import type { MetricData } from '@/api/types'
@@ -396,12 +404,14 @@ export default function Playground() {
           }
         }
         | { kind: 'Flatten'; params: Record<string, never> }
+        | { kind: 'BatchNorm'; params: Record<string, never> }
         | { kind: 'Dropout'; params: { rate: number } }
         | {
             kind: 'Pooling'
             params: { type: 'max'; pool_size: number; stride: number; padding: number }
           }
         | { kind: 'Output'; params: { classes: number; activation: 'softmax' } }
+        | { kind: 'ResidualBlock'; params: { filters: number; kernel: number } }
 
       try {
         const payload = JSON.parse(raw) as LayerTemplatePayload
@@ -421,10 +431,14 @@ export default function Playground() {
           newLayer = { id: generateLayerId('Convolution'), kind: 'Convolution', params: { filters: payload.params.filters, kernel: payload.params.kernel, stride: payload.params.stride, padding: payload.params.padding, activation: payload.params.activation }, position }
         } else if (payload.kind === 'Flatten') {
           newLayer = { id: generateLayerId('Flatten'), kind: 'Flatten', params: {}, position }
+        } else if (payload.kind === 'BatchNorm') {
+          newLayer = { id: generateLayerId('BatchNorm'), kind: 'BatchNorm', params: {}, position }
         } else if (payload.kind === 'Dropout') {
           newLayer = { id: generateLayerId('Dropout'), kind: 'Dropout', params: { rate: payload.params.rate }, position }
         } else if (payload.kind === 'Pooling') {
           newLayer = { id: generateLayerId('Pooling'), kind: 'Pooling', params: { type: 'max', pool_size: payload.params.pool_size, stride: payload.params.stride, padding: payload.params.padding }, position }
+        } else if (payload.kind === 'ResidualBlock') {
+          newLayer = { id: generateLayerId('ResidualBlock'), kind: 'ResidualBlock', params: { filters: payload.params.filters, kernel: payload.params.kernel }, position }
         } else if (payload.kind === 'Output') {
           newLayer = { id: generateLayerId('Output'), kind: 'Output', params: { classes: payload.params.classes, activation: payload.params.activation }, position }
         }

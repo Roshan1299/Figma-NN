@@ -11,6 +11,8 @@ export type LayerKind =
   | 'Pooling'
   | 'Flatten'
   | 'Dropout'
+  | 'BatchNorm'
+  | 'ResidualBlock'
   | 'Output';
 
 export type ActivationType = 'relu' | 'sigmoid' | 'tanh' | 'softmax' | 'none';
@@ -81,6 +83,19 @@ export interface DropoutLayer extends Layer {
   };
 }
 
+export interface BatchNormLayer extends Layer {
+  kind: 'BatchNorm';
+  params: Record<string, never>;
+}
+
+export interface ResidualBlockLayer extends Layer {
+  kind: 'ResidualBlock';
+  params: {
+    filters: number;
+    kernel: number;
+  };
+}
+
 export interface OutputLayer extends Layer {
   kind: 'Output';
   params: {
@@ -96,6 +111,8 @@ export type AnyLayer =
   | PoolingLayer
   | FlattenLayer
   | DropoutLayer
+  | BatchNormLayer
+  | ResidualBlockLayer
   | OutputLayer;
 
 // Edge with shape label

@@ -62,6 +62,24 @@ type PoolingTemplate = {
   docsUrl: string
 }
 
+type BatchNormTemplate = {
+  id: string
+  label: string
+  description: string
+  kind: 'BatchNorm'
+  params: Record<string, never>
+  docsUrl: string
+}
+
+type ResidualBlockTemplate = {
+  id: string
+  label: string
+  description: string
+  kind: 'ResidualBlock'
+  params: { filters: number; kernel: number }
+  docsUrl: string
+}
+
 type OutputTemplate = {
   id: string
   label: string
@@ -77,6 +95,8 @@ type LayerTemplate =
   | FlattenTemplate
   | DropoutTemplate
   | PoolingTemplate
+  | BatchNormTemplate
+  | ResidualBlockTemplate
   | OutputTemplate
 
 // --- Styles ---
@@ -137,6 +157,24 @@ const TEMPLATE_STYLES: Record<
     icon: 'text-emerald-600',
     iconHover: 'hover:text-emerald-800',
   },
+  BatchNorm: {
+    border: 'border-teal-300',
+    background: 'bg-teal-50',
+    hover: 'hover:bg-teal-100',
+    label: 'text-teal-700',
+    description: 'text-teal-600',
+    icon: 'text-teal-600',
+    iconHover: 'hover:text-teal-800',
+  },
+  ResidualBlock: {
+    border: 'border-purple-300',
+    background: 'bg-purple-50',
+    hover: 'hover:bg-purple-100',
+    label: 'text-purple-700',
+    description: 'text-purple-600',
+    icon: 'text-purple-600',
+    iconHover: 'hover:text-purple-800',
+  },
   Output: {
     border: 'border-red-300',
     background: 'bg-red-50',
@@ -189,6 +227,22 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
     kind: 'Pooling',
     params: { type: 'max', pool_size: 2, stride: 2, padding: 0 },
     docsUrl: 'https://keras.io/api/layers/pooling_layers/max_pooling2d/',
+  },
+  {
+    id: 'batchnorm-layer',
+    label: 'Batch Norm',
+    description: 'Normalizes layer inputs for faster, more stable training.',
+    kind: 'BatchNorm',
+    params: {},
+    docsUrl: 'https://pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html',
+  },
+  {
+    id: 'residual-block',
+    label: 'Residual Block',
+    description: 'Two conv layers with a skip connection. Helps train deeper networks.',
+    kind: 'ResidualBlock',
+    params: { filters: 64, kernel: 3 },
+    docsUrl: 'https://arxiv.org/abs/1512.03385',
   },
   {
     id: 'output-layer-mnist',

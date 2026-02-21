@@ -130,6 +130,24 @@ export function parseArchitectureToGraph(arch: any): { layers: Record<string, An
         position: { x: currentX, y: currentY }
       });
     }
+    else if (l.type === 'batchnorm2d' || l.type === 'batchnorm1d') {
+      const bnId = generateId('batchnorm');
+      addLayer({
+        id: bnId,
+        kind: 'BatchNorm',
+        params: {},
+        position: { x: currentX, y: currentY }
+      });
+    }
+    else if (l.type === 'residual_block') {
+      const resId = generateId('resblock');
+      addLayer({
+        id: resId,
+        kind: 'ResidualBlock',
+        params: { filters: l.out_channels || 64, kernel: l.kernel_size || 3 },
+        position: { x: currentX, y: currentY }
+      });
+    }
     else if (l.type === 'linear') {
       // Check if it's output
       let isOutput = false;
