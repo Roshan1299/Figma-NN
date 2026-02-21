@@ -605,6 +605,12 @@ export default function Playground() {
             nodesDraggable={!isTraining}
             nodesConnectable={!isTraining}
             nodeTypes={nodeTypes}
+            selectNodesOnDrag={false}
+            multiSelectionKeyCode="shift"
+            panOnDrag={true}
+            panOnScroll={false}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
             fitView
             snapToGrid
             snapGrid={[15, 15]}
