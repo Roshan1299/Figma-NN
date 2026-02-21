@@ -33,6 +33,8 @@ import { useChat } from '@/hooks/useChat'
 import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
+import { useMarketplaceStore } from '@/store/marketplaceStore'
+import { parseArchitectureToGraph } from '@/lib/architectureParser'
 import { ConnectionPreview } from '@/components/ConnectionPreview'
 import { GridBackground } from '@/components/GridBackground'
 import { AlignmentGuides } from '@/components/AlignmentGuides'
@@ -544,8 +546,24 @@ export default function Playground() {
     }
   }, [layers, edges])
 
+  const { importedArchitecture, clearImportedArchitecture } = useMarketplaceStore()
+
   useEffect(() => {
-    if (Object.keys(layers).length === 0) {
+    if (importedArchitecture) {
+      try {
+        const parsedLayout = parseArchitectureToGraph(importedArchitecture);
+        loadGraph(parsedLayout.layers, parsedLayout.edges);
+        clearImportedArchitecture();
+        if (reactFlowInstance) {
+          setTimeout(() => {
+             reactFlowInstance.fitView({ padding: 0.1, duration: 500 });
+          }, 100);
+        }
+      } catch (e) {
+        console.error("Failed to parse imported architecture:", e);
+        clearImportedArchitecture();
+      }
+    } else if (Object.keys(layers).length === 0) {
       const blankPreset = getPresetGraph('blank')
       loadGraph(blankPreset.layers, blankPreset.edges)
       if (reactFlowInstance) {

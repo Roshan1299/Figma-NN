@@ -21,9 +21,11 @@ function getClientId(): string {
   return id
 }
 
+import { API_BASE } from '@/api/marketplace'
+
 function getSocket(): Socket {
   if (!_socket) {
-    _socket = io('/', {
+    _socket = io(API_BASE, {
       path: '/socket.io',
       transports: ['polling'],
       auth: { clientId: getClientId() },
