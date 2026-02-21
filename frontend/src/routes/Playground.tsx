@@ -34,6 +34,7 @@ import { useChat } from '@/hooks/useChat'
 import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
+import { ConnectionPreview } from '@/components/ConnectionPreview'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -625,6 +626,7 @@ export default function Playground() {
           >
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <ConnectionPreview />
             <CollabCursors />
           </ReactFlow>
         </div>
