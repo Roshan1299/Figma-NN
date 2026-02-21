@@ -27,6 +27,11 @@ def init_db():
                 architecture_json TEXT NOT NULL
             )
         ''')
+        # Add preview_image column if it doesn't exist yet
+        try:
+            conn.execute('ALTER TABLE marketplace_models ADD COLUMN preview_image TEXT')
+        except sqlite3.OperationalError:
+            pass  # column already exists
         conn.commit()
 
 # Initialize DB on import
@@ -50,6 +55,7 @@ def publish_model():
     tags = payload.get("tags")
     author_name = payload.get("authorName")
     architecture = payload.get("architecture")
+    preview_image = payload.get("previewImage")  # base64 data URL, optional
 
     if not all([name, description, isinstance(tags, list), author_name, isinstance(architecture, dict)]):
         return _error_response("Missing required fields or invalid types.", status=400)
@@ -63,11 +69,11 @@ def publish_model():
         with get_db() as conn:
             conn.execute(
                 """
-                INSERT INTO marketplace_models 
-                (id, name, description, tags_json, author_name, created_at, architecture_json) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO marketplace_models
+                (id, name, description, tags_json, author_name, created_at, architecture_json, preview_image)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (model_id, name, description, tags_json, author_name, created_at, architecture_json)
+                (model_id, name, description, tags_json, author_name, created_at, architecture_json, preview_image)
             )
             conn.commit()
     except sqlite3.Error as e:
@@ -81,13 +87,13 @@ def list_models():
         with get_db() as conn:
             cursor = conn.execute(
                 """
-                SELECT id, name, description, tags_json, author_name, created_at 
-                FROM marketplace_models 
+                SELECT id, name, description, tags_json, author_name, created_at, architecture_json, preview_image
+                FROM marketplace_models
                 ORDER BY created_at DESC
                 """
             )
             rows = cursor.fetchall()
-            
+
             results = []
             for row in rows:
                 results.append({
@@ -96,7 +102,9 @@ def list_models():
                     "description": row["description"],
                     "tags": json.loads(row["tags_json"]),
                     "authorName": row["author_name"],
-                    "createdAt": row["created_at"]
+                    "createdAt": row["created_at"],
+                    "architecture": json.loads(row["architecture_json"]),
+                    "previewImage": row["preview_image"]
                 })
             return jsonify(results), 200
     except sqlite3.Error as e:
@@ -108,14 +116,14 @@ def get_model(model_id):
         with get_db() as conn:
             cursor = conn.execute(
                 """
-                SELECT id, name, description, tags_json, author_name, created_at, architecture_json 
-                FROM marketplace_models 
+                SELECT id, name, description, tags_json, author_name, created_at, architecture_json, preview_image
+                FROM marketplace_models
                 WHERE id = ?
                 """,
                 (model_id,)
             )
             row = cursor.fetchone()
-            
+
             if row is None:
                 return _error_response("Model not found.", status=404)
 
@@ -126,7 +134,8 @@ def get_model(model_id):
                 "tags": json.loads(row["tags_json"]),
                 "authorName": row["author_name"],
                 "createdAt": row["created_at"],
-                "architecture": json.loads(row["architecture_json"])
+                "architecture": json.loads(row["architecture_json"]),
+                "previewImage": row["preview_image"]
             }), 200
     except sqlite3.Error as e:
         return _error_response(f"Database error: {str(e)}", status=500)

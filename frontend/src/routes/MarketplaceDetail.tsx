@@ -84,17 +84,39 @@ export default function MarketplaceDetail() {
       </div>
 
       <div className="flex-1 relative z-10 border border-white/10 rounded-2xl bg-[#0a0a0c]/80 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex items-center gap-3">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-            <div className="w-3 h-3 rounded-full bg-green-500/80" />
-          </div>
-          <h3 className="text-sm font-medium text-gray-400 tracking-wider">architecture.json</h3>
-        </div>
-        <pre className="flex-1 p-6 text-sm text-gray-300 overflow-auto font-mono selection:bg-primary/30">
-          <code className="block">{JSON.stringify(model.architecture, null, 2)}</code>
-        </pre>
+        {model.previewImage ? (
+          <>
+            <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-400 tracking-wider">Architecture Preview</h3>
+            </div>
+            <div className="flex-1 flex items-center justify-center p-6 bg-black/40">
+              <img
+                src={model.previewImage}
+                alt={`${model.name} architecture`}
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-400 tracking-wider">architecture.json</h3>
+            </div>
+            <pre className="flex-1 p-6 text-sm text-gray-300 overflow-auto font-mono selection:bg-primary/30">
+              <code className="block">{JSON.stringify(model.architecture, null, 2)}</code>
+            </pre>
+          </>
+        )}
       </div>
     </div>
   );
