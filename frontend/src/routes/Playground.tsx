@@ -20,7 +20,7 @@ import { OutputLayerNode } from '@/components/nodes/OutputLayerNode'
 import { PoolingLayerNode } from '@/components/nodes/PoolingLayerNode'
 import { FlattenLayerNode } from '@/components/nodes/FlattenLayerNode'
 import { DropoutLayerNode } from '@/components/nodes/DropoutLayerNode'
-import { HyperparamsPanel, type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
+import { type Hyperparams, DEFAULT_HYPERPARAMS } from '@/components/HyperparamsPanel'
 import { validateConnection, notifyConnectionError } from '@/lib/shapeInference'
 import { useTrainingMetrics } from '@/hooks/useTraining'
 import { LeftSidebar } from '@/components/LeftSidebar'
@@ -30,7 +30,7 @@ import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
 import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
-import { PresetChips, getPresetGraph, type PresetType } from '@/components/PresetChips'
+import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 
@@ -113,8 +113,8 @@ function TrainBar({
         style={{
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          background: 'rgba(10, 8, 20, 0.75)',
-          border: '1px solid rgba(120, 100, 255, 0.2)',
+          background: 'rgba(8, 15, 20, 0.75)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
           minWidth: 280,
           cursor: isCancelling ? 'wait' : 'pointer',
@@ -124,8 +124,8 @@ function TrainBar({
         <div
           className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all"
           style={{
-            background: isDone ? '#065f46' : isFailed ? '#7f1d1d' : canCancel ? '#6d28d9' : '#7c3aed',
-            boxShadow: `0 0 16px ${isDone ? '#34d39944' : isFailed ? '#f8717144' : '#7c3aed44'}`,
+            background: isDone ? '#065f46' : isFailed ? '#7f1d1d' : canCancel ? '#0e7490' : '#0891b2',
+            boxShadow: `0 0 16px ${isDone ? '#34d39944' : isFailed ? '#f8717144' : '#0891b244'}`,
           }}
         >
           {isCancelling ? (
@@ -165,17 +165,17 @@ function TrainBar({
                 : isFailed ? 'Failed'
                 : 'Ready to Train'}
             </span>
-            <span className="text-[13px] font-bold font-mono ml-4" style={{ color: isDone ? '#34d399' : '#7c3aed' }}>
+            <span className="text-[13px] font-bold font-mono ml-4" style={{ color: isDone ? '#34d399' : '#0891b2' }}>
               {pct}%
             </span>
           </div>
           {/* Progress bar */}
-          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1e1e2e' }}>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1e2a2e' }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${isDone ? 100 : pct}%`,
-                background: isDone ? '#34d399' : isFailed ? '#f87171' : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                background: isDone ? '#34d399' : isFailed ? '#f87171' : 'linear-gradient(90deg, #06b6d4, #22d3ee)',
               }}
             />
           </div>
@@ -256,7 +256,7 @@ export default function Playground() {
       targetHandle: edge.targetHandle ?? undefined,
       label: edge.label,
       animated: true,
-      style: { strokeWidth: 2, stroke: 'rgba(99,102,241,0.5)' },
+      style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.5)' },
       labelStyle: { fill: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: 'ui-monospace,monospace', fontWeight: 500 },
       labelBgStyle: { fill: 'transparent', stroke: 'transparent' },
       labelBgPadding: [2, 2] as [number, number],
@@ -500,7 +500,6 @@ export default function Playground() {
     const presetGraph = getPresetGraph(preset)
     loadGraph(presetGraph.layers, presetGraph.edges)
     broadcastOp({ op_type: 'load_graph', payload: { layers: presetGraph.layers, edges: presetGraph.edges } })
-    setCurrentPreset(preset)
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
     }
@@ -609,7 +608,7 @@ export default function Playground() {
             fitView
             snapToGrid
             snapGrid={[15, 15]}
-            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.48 0.25 285)', strokeWidth: 2, strokeDasharray: '4 4' } }}
+            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.65 0.15 195)', strokeWidth: 2, strokeDasharray: '4 4' } }}
             onInit={setReactFlowInstance}
             className="bg-background [&_.react-flow__pane]:bg-transparent"
           >

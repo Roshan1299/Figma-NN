@@ -324,7 +324,7 @@ import type { StoredModel } from '@/hooks/useModels'
 
 const KIND_COLOR: Record<string, string> = {
   Input: '#10b981', Dense: '#ef4444', Conv2D: '#3b82f6', Linear: '#ef4444',
-  Flatten: '#f97316', Dropout: '#f43f5e', Output: '#eab308', MaxPool2D: '#a855f7',
+  Flatten: '#f97316', Dropout: '#f43f5e', Output: '#eab308', MaxPool2D: '#06b6d4',
 }
 
 function ModelCard({ model }: { model: StoredModel }) {
@@ -401,7 +401,7 @@ function ModelCard({ model }: { model: StoredModel }) {
                 <p className="text-[10px] uppercase tracking-widest" style={{ color: '#444' }}>Best Run</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { label: 'Val Acc', value: `${(last.val_accuracy * 100).toFixed(1)}%`, color: '#a78bfa' },
+                    { label: 'Val Acc', value: `${(last.val_accuracy * 100).toFixed(1)}%`, color: '#22d3ee' },
                     { label: 'Val Loss', value: last.val_loss.toFixed(4), color: '#60a5fa' },
                     { label: 'Epochs', value: String(last.epoch), color: '#888' },
                   ].map(({ label, value, color }) => (
@@ -559,7 +559,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
       valLoss: latest.val_loss < prev.val_loss ? 'good' : 'bad',
       trainAcc: latest.train_accuracy > prev.train_accuracy ? 'good' : 'bad',
       valAcc: latest.val_accuracy > prev.val_accuracy ? 'good' : 'bad',
-    }
+    } as const
   }, [throttledMetrics])
 
   const isOverfitting = latestMetric ? (latestMetric.train_accuracy - latestMetric.val_accuracy) > 0.1 : false
@@ -735,7 +735,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
                   <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ background: '#1c1c1e' }}>
                     <div
                       className="h-full rounded-full transition-all duration-300"
-                      style={{ width: `${latestMetric.progress * 100}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }}
+                      style={{ width: `${latestMetric.progress * 100}%`, background: 'linear-gradient(90deg, #06b6d4, #22d3ee)' }}
                     />
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
                   <DarkMetricCard label="Train Loss" value={latestMetric.train_loss} trend={trends.trainLoss} color="#f87171" decimals={4} />
                   <DarkMetricCard label="Val Loss" value={latestMetric.val_loss} trend={trends.valLoss} color="#60a5fa" decimals={4} />
                   <DarkMetricCard label="Train Acc" value={latestMetric.train_accuracy} format="pct" trend={trends.trainAcc} color="#34d399" />
-                  <DarkMetricCard label="Val Acc" value={latestMetric.val_accuracy} format="pct" trend={trends.valAcc} color="#a78bfa" />
+                  <DarkMetricCard label="Val Acc" value={latestMetric.val_accuracy} format="pct" trend={trends.valAcc} color="#22d3ee" />
                 </div>
               )}
 
@@ -808,7 +808,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
                             <td className="px-2 py-1 font-mono" style={{ color: '#666' }}>{m.epoch}</td>
                             <td className="px-2 py-1 text-right font-mono" style={{ color: '#f87171aa' }}>{m.train_loss.toFixed(4)}</td>
                             <td className="px-2 py-1 text-right font-mono" style={{ color: '#60a5faaa' }}>{m.val_loss.toFixed(4)}</td>
-                            <td className="px-2 py-1 text-right font-mono" style={{ color: '#a78bfaaa' }}>{(m.val_accuracy * 100).toFixed(1)}%</td>
+                            <td className="px-2 py-1 text-right font-mono" style={{ color: '#22d3eeaa' }}>{(m.val_accuracy * 100).toFixed(1)}%</td>
                           </tr>
                         ))}
                       </tbody>
@@ -830,7 +830,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
 
               {isTraining && metrics.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
-                  <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24" style={{ color: '#6366f1' }}>
+                  <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24" style={{ color: '#06b6d4' }}>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
