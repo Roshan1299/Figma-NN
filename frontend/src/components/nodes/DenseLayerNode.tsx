@@ -3,14 +3,16 @@ import { useGraphStore } from '../../store/graphStore'
 import type { DenseLayer } from '../../types/graph'
 import { CustomHandle } from '../CustomHandle'
 
-export function DenseLayerNode({ id, selected }: NodeProps) {
+export function DenseLayerNode({ id, selected, data }: NodeProps) {
   const layer = useGraphStore((state) => state.layers[id]) as DenseLayer | undefined
   const removeLayer = useGraphStore((state) => state.removeLayer)
 
   if (!layer) return null
 
+  const isDragging = data?.isDragging ?? false
+
   return (
-    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
+    <div className={`relative bg-card border rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all duration-200 group ${isDragging ? 'shadow-[0_8px_24px_rgba(0,0,0,0.4)]' : selected ? 'border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'border-border shadow-sm hover:shadow-md hover:border-cyan-500/50'}`}>
       <div className="w-8 h-8 rounded bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       </div>
