@@ -1,6 +1,7 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Position, type NodeProps } from '@xyflow/react'
 import { useGraphStore } from '@/store/graphStore'
 import type { DropoutLayer } from '@/types/graph'
+import { CustomHandle } from '../CustomHandle'
 
 export function DropoutLayerNode({ id, selected }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as DropoutLayer | undefined
@@ -27,8 +28,8 @@ export function DropoutLayerNode({ id, selected }: NodeProps) {
         ×
       </button>
 
-      <Handle type="target" position={Position.Top} id="input" className="w-2.5 h-2.5 bg-primary border-background border-2 top-[-5px]" />
-      <Handle type="source" position={Position.Bottom} id="output" className="w-2.5 h-2.5 bg-primary border-background border-2 bottom-[-5px]" />
+      <CustomHandle type="target" position={Position.Top} id="input" label="Input" />
+      <CustomHandle type="source" position={Position.Bottom} id="output" label="Output" />
     </div>
   )
 }
