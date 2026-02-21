@@ -1,7 +1,7 @@
 import { Handle, Position, type HandleProps } from '@xyflow/react'
 import { useMemo } from 'react'
 
-interface PortHandleProps extends Omit<HandleProps, 'position'> {
+interface PortHandleProps extends Omit<HandleProps, 'position' | 'type'> {
   side: 'top' | 'bottom' | 'left' | 'right'
   kind: 'input' | 'output'
   isValidTarget?: boolean
@@ -75,8 +75,8 @@ export function PortHandle({
         <Handle
           type={isInput ? 'target' : 'source'}
           position={position}
-          {...props}
           className="w-4 h-4 opacity-0"
+          {...props}
         />
       </div>
     </div>
