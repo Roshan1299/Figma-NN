@@ -260,6 +260,7 @@ export default function Playground() {
       targetHandle: edge.targetHandle ?? undefined,
       label: edge.label,
       animated: true,
+      reconnectable: true,
       style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.6)' },
       labelStyle: { fill: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: 'ui-monospace,monospace', fontWeight: 500 },
       labelBgStyle: { fill: 'transparent', stroke: 'transparent' },
@@ -267,18 +268,42 @@ export default function Playground() {
     }));
   }, [edges]);
 
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      const { source, target } = newConnection;
+      if (!source || !target) return;
+
+      const sourceLayer = layers[source];
+      const targetLayer = layers[target];
+      if (!sourceLayer || !targetLayer) return;
+
+      const validation = validateConnection(sourceLayer, targetLayer);
+      if (!validation.valid) {
+        notifyConnectionError(validation.error || 'Invalid connection');
+        return;
+      }
+
+      removeEdge(oldEdge.id);
+      const handleKey = (handle?: string | null) => handle ?? 'default';
+      const edgeId = `${source}:${handleKey(newConnection.sourceHandle)}->${target}:${handleKey(newConnection.targetHandle)}`;
+      const edge = {
+        id: edgeId,
+        source,
+        target,
+        sourceHandle: newConnection.sourceHandle ?? null,
+        targetHandle: newConnection.targetHandle ?? null,
+      };
+      addEdge(edge);
+      broadcastOp({ op_type: 'remove_edge', payload: { id: oldEdge.id } });
+      broadcastOp({ op_type: 'add_edge', payload: { edge } });
+    },
+    [layers, removeEdge, addEdge, broadcastOp]
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
       const { source, target } = connection;
       if (!source || !target) return;
-
-      console.log('[ReactFlow] connect attempt', {
-        source,
-        target,
-        sourceHandle: connection.sourceHandle ?? null,
-        targetHandle: connection.targetHandle ?? null,
-        existingEdges: edges,
-      })
 
       const sourceLayer = layers[source];
       const targetLayer = layers[target];
@@ -604,6 +629,7 @@ export default function Playground() {
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
             onConnect={onConnect}
+            onReconnect={onReconnect}
             onEdgesChange={onEdgesChange}
             onNodesChange={onNodesChange}
             onSelectionChange={onSelectionChange}
