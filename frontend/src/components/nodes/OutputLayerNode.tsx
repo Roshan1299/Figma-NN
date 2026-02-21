@@ -1,6 +1,7 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Position, type NodeProps } from '@xyflow/react';
 import { useGraphStore } from '../../store/graphStore';
 import type { OutputLayer } from '../../types/graph';
+import { CustomHandle } from '../CustomHandle';
 
 export function OutputLayerNode({ id, selected }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as OutputLayer | undefined;
@@ -27,7 +28,7 @@ export function OutputLayerNode({ id, selected }: NodeProps) {
         ×
       </button>
 
-      <Handle type="target" position={Position.Top} id="input" className="w-2.5 h-2.5 bg-primary border-background border-2 top-[-5px]" />
+      <CustomHandle type="target" position={Position.Top} id="input" label="Input" />
     </div>
   );
 }
