@@ -87,7 +87,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 transition-transform transform hover:-translate-y-2 flex items-center gap-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-3 shadow-lg cursor-pointer"
+        className="fixed bottom-4 right-4 transition-transform transform hover:-translate-y-2 flex items-center gap-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full px-5 py-3 shadow-lg cursor-pointer"
       >
         <div className="flex items-center justify-center p-1">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -186,7 +186,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
                 href="https://en.wikipedia.org/wiki/MNIST_database"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-medium"
+                className="text-cyan-600 hover:underline font-medium"
               >
                 MNIST digits dataset (0-9)
               </a>{' '}
@@ -195,14 +195,14 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
                 href="https://www.nist.gov/itl/products-and-services/emnist-dataset"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-medium"
+                className="text-cyan-600 hover:underline font-medium"
               >
                 EMNIST letters dataset (A-Z)
               </a>
               . Select your dataset in the Input layer.
             </p>
 
-            <p className="mt-3 text-blue-600 font-medium">
+            <p className="mt-3 text-cyan-600 font-medium">
               Try one of these prompts to get started:
             </p>
 
@@ -212,7 +212,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
                   key={index}
                   onClick={() => handleSend(prompt)}
                   disabled={isStreaming}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium rounded-full border border-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="px-3 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-medium rounded-full border border-cyan-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {prompt}
                 </button>
@@ -228,7 +228,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
           >
             <div
               className={`${message.role === 'system' ? 'max-w-[90%]' : 'max-w-[80%]'} rounded-lg px-4 py-2 ${message.role === 'user'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-cyan-600 text-white'
                 : message.role === 'system'
                   ? 'bg-green-50 text-green-800 border border-green-200'
                   : 'bg-gray-100 text-gray-900'
@@ -252,7 +252,7 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
             <div className="bg-gray-100 text-gray-900 rounded-lg px-4 py-3">
               <div className="flex flex-col items-center gap-3">
                 <svg
-                  className="w-8 h-8 animate-spin text-blue-600"
+                  className="w-8 h-8 animate-spin text-cyan-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -301,12 +301,12 @@ export function ChatbotPanel({ onViewProposal, messages, isStreaming, isGenerati
             onKeyPress={handleKeyPress}
             placeholder="Ask Figgy..."
             disabled={isStreaming}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm disabled:bg-gray-100"
           />
           <button
             onClick={() => handleSend()}
             disabled={!inputValue.trim() || isStreaming}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg transition-colors"
+            className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <svg
               className="w-5 h-5"

@@ -1,17 +1,20 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { type NodeProps } from '@xyflow/react'
 import { useGraphStore } from '@/store/graphStore'
 import type { PoolingLayer } from '@/types/graph'
+import { PortHandle } from '../PortHandle'
 
-export function PoolingLayerNode({ id, selected }: NodeProps) {
+export function PoolingLayerNode({ id, selected, data }: NodeProps) {
   const layer = useGraphStore(state => state.layers[id]) as PoolingLayer | undefined
   const removeLayer = useGraphStore(state => state.removeLayer)
 
   if (!layer) return null
 
+  const isDragging = data?.isDragging ?? false
+
   return (
-    <div className={`relative bg-card border ${selected ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'border-border shadow-sm'} rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all hover:border-primary/50 group`}>
-      <div className="w-8 h-8 rounded bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+    <div className={`relative bg-card border rounded-xl min-w-[180px] flex items-center p-3 gap-3 transition-all duration-200 group ${isDragging ? 'shadow-[0_8px_24px_rgba(0,0,0,0.4)]' : selected ? 'border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'border-border shadow-sm hover:shadow-md hover:border-cyan-500/50'}`}>
+      <div className="w-8 h-8 rounded bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
       </div>
 
       <div className="flex flex-col">
@@ -31,8 +34,9 @@ export function PoolingLayerNode({ id, selected }: NodeProps) {
         ×
       </button>
 
-      <Handle type="target" position={Position.Top} id="input" className="w-2.5 h-2.5 bg-primary border-background border-2 top-[-5px]" />
-      <Handle type="source" position={Position.Bottom} id="output" className="w-2.5 h-2.5 bg-primary border-background border-2 bottom-[-5px]" />
+      {/* External ports */}
+      <PortHandle side="left" kind="input" id="input" />
+      <PortHandle side="right" kind="output" id="output" />
     </div>
   )
 }

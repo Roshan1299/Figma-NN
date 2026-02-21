@@ -35,6 +35,9 @@ import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 import { useMarketplaceStore } from '@/store/marketplaceStore'
 import { parseArchitectureToGraph } from '@/lib/architectureParser'
+import { ConnectionPreview } from '@/components/ConnectionPreview'
+import { GridBackground } from '@/components/GridBackground'
+import { AlignmentGuides } from '@/components/AlignmentGuides'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -101,7 +104,7 @@ function TrainBar({
   const isDone = effectiveState === 'succeeded'
   const isFailed = effectiveState === 'failed'
 
-  const bottomOffset = drawerCollapsed ? 48 : 228
+  const bottomOffset = drawerCollapsed ? 48 : 308
 
   return (
     <div
@@ -115,8 +118,8 @@ function TrainBar({
         style={{
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          background: 'rgba(10, 8, 20, 0.75)',
-          border: '1px solid rgba(120, 100, 255, 0.2)',
+          background: 'rgba(8, 15, 20, 0.75)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
           minWidth: 280,
           cursor: isCancelling ? 'wait' : 'pointer',
@@ -126,8 +129,8 @@ function TrainBar({
         <div
           className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all"
           style={{
-            background: isDone ? '#065f46' : isFailed ? '#7f1d1d' : canCancel ? '#6d28d9' : '#7c3aed',
-            boxShadow: `0 0 16px ${isDone ? '#34d39944' : isFailed ? '#f8717144' : '#7c3aed44'}`,
+            background: isDone ? '#065f46' : isFailed ? '#7f1d1d' : canCancel ? '#0e7490' : '#0891b2',
+            boxShadow: `0 0 16px ${isDone ? '#34d39944' : isFailed ? '#f8717144' : '#0891b244'}`,
           }}
         >
           {isCancelling ? (
@@ -167,17 +170,17 @@ function TrainBar({
                 : isFailed ? 'Failed'
                 : 'Ready to Train'}
             </span>
-            <span className="text-[13px] font-bold font-mono ml-4" style={{ color: isDone ? '#34d399' : '#7c3aed' }}>
+            <span className="text-[13px] font-bold font-mono ml-4" style={{ color: isDone ? '#34d399' : '#0891b2' }}>
               {pct}%
             </span>
           </div>
           {/* Progress bar */}
-          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1e1e2e' }}>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1e2a2e' }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${isDone ? 100 : pct}%`,
-                background: isDone ? '#34d399' : isFailed ? '#f87171' : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                background: isDone ? '#34d399' : isFailed ? '#f87171' : 'linear-gradient(90deg, #06b6d4, #22d3ee)',
               }}
             />
           </div>
@@ -230,6 +233,7 @@ export default function Playground() {
   } | null>(null)
   const { messages, isStreaming, isGeneratingSchema, proposedSchema, sendMessage, clearProposedSchema, addMessage, clearMessages } = useChat()
   const { broadcastOp, broadcastCursor } = useCollaboration()
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   // Convert store state to ReactFlow format with auto-layout
   const reactFlowNodes = useMemo((): Node[] => {
@@ -238,7 +242,7 @@ export default function Playground() {
       id: layer.id,
       type: layerKindToNodeType[layer.kind],
       position: layer.position ?? { x: index * 300 + 50, y: 250 },
-      data: {},
+      data: { isDragging: draggingNodeId === layer.id },
       draggable: true,
       style: {
         background: 'transparent',
@@ -247,7 +251,7 @@ export default function Playground() {
         boxShadow: 'none',
       },
     }));
-  }, [layers]);
+  }, [layers, draggingNodeId]);
 
   const reactFlowEdges = useMemo((): Edge[] => {
     return edges.map(edge => ({
@@ -258,25 +262,50 @@ export default function Playground() {
       targetHandle: edge.targetHandle ?? undefined,
       label: edge.label,
       animated: true,
-      style: { strokeWidth: 2, stroke: 'rgba(99,102,241,0.5)' },
+      reconnectable: true,
+      style: { strokeWidth: 2, stroke: 'rgba(6,182,212,0.6)' },
       labelStyle: { fill: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: 'ui-monospace,monospace', fontWeight: 500 },
       labelBgStyle: { fill: 'transparent', stroke: 'transparent' },
       labelBgPadding: [2, 2] as [number, number],
     }));
   }, [edges]);
 
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      const { source, target } = newConnection;
+      if (!source || !target) return;
+
+      const sourceLayer = layers[source];
+      const targetLayer = layers[target];
+      if (!sourceLayer || !targetLayer) return;
+
+      const validation = validateConnection(sourceLayer, targetLayer);
+      if (!validation.valid) {
+        notifyConnectionError(validation.error || 'Invalid connection');
+        return;
+      }
+
+      removeEdge(oldEdge.id);
+      const handleKey = (handle?: string | null) => handle ?? 'default';
+      const edgeId = `${source}:${handleKey(newConnection.sourceHandle)}->${target}:${handleKey(newConnection.targetHandle)}`;
+      const edge = {
+        id: edgeId,
+        source,
+        target,
+        sourceHandle: newConnection.sourceHandle ?? null,
+        targetHandle: newConnection.targetHandle ?? null,
+      };
+      addEdge(edge);
+      broadcastOp({ op_type: 'remove_edge', payload: { id: oldEdge.id } });
+      broadcastOp({ op_type: 'add_edge', payload: { edge } });
+    },
+    [layers, removeEdge, addEdge, broadcastOp]
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
       const { source, target } = connection;
       if (!source || !target) return;
-
-      console.log('[ReactFlow] connect attempt', {
-        source,
-        target,
-        sourceHandle: connection.sourceHandle ?? null,
-        targetHandle: connection.targetHandle ?? null,
-        existingEdges: edges,
-      })
 
       const sourceLayer = layers[source];
       const targetLayer = layers[target];
@@ -325,7 +354,10 @@ export default function Playground() {
       changes.forEach((change) => {
         if (change.type === 'position' && change.position) {
           updateLayerPosition(change.id, change.position)
-          if (!change.dragging) {
+          if (change.dragging) {
+            setDraggingNodeId(change.id)
+          } else {
+            setDraggingNodeId(null)
             broadcastOp({ op_type: 'update_layer_position', payload: { id: change.id, position: change.position } })
           }
         }
@@ -615,6 +647,7 @@ export default function Playground() {
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
             onConnect={onConnect}
+            onReconnect={onReconnect}
             onEdgesChange={onEdgesChange}
             onNodesChange={onNodesChange}
             onSelectionChange={onSelectionChange}
@@ -623,15 +656,24 @@ export default function Playground() {
             nodesDraggable={!isTraining}
             nodesConnectable={!isTraining}
             nodeTypes={nodeTypes}
+            selectNodesOnDrag={false}
+            multiSelectionKeyCode="shift"
+            panOnDrag={true}
+            panOnScroll={false}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
             fitView
             snapToGrid
             snapGrid={[15, 15]}
-            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.48 0.25 285)', strokeWidth: 2, strokeDasharray: '4 4' } }}
+            defaultEdgeOptions={{ animated: true, style: { stroke: 'oklch(0.65 0.15 195)', strokeWidth: 2, strokeDasharray: '4 4' } }}
             onInit={setReactFlowInstance}
             className="bg-background [&_.react-flow__pane]:bg-transparent"
           >
+            <GridBackground />
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <AlignmentGuides />
+            <ConnectionPreview />
             <CollabCursors />
           </ReactFlow>
         </div>

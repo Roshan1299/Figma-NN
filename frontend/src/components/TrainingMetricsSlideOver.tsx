@@ -232,8 +232,8 @@ export const TrainingMetricsSlideOver: FC<TrainingMetricsSlideOverProps> = ({
                   label="Val Acc"
                   value={latestMetric.val_accuracy}
                   format="percentage"
-                  colorClass="text-purple-700"
-                  bgColorClass="bg-purple-50"
+                  colorClass="text-cyan-700"
+                  bgColorClass="bg-cyan-50"
                   trend={trends.valAcc}
                 />
               </div>

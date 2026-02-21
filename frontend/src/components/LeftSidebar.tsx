@@ -32,7 +32,7 @@ const LAYER_GROUPS = [
   {
     name: 'Pooling',
     items: [
-      { id: 'maxpool2d', label: 'MaxPool2D', subtext: 'Max pooling 2D', kind: 'Pooling', params: { type: 'max', pool_size: 2, stride: 2, padding: 0 }, iconColor: '#a855f7' },
+      { id: 'maxpool2d', label: 'MaxPool2D', subtext: 'Max pooling 2D', kind: 'Pooling', params: { type: 'max', pool_size: 2, stride: 2, padding: 0 }, iconColor: '#06b6d4' },
     ]
   },
   {
@@ -73,7 +73,7 @@ export function LeftSidebar({ collapsed, onToggleCollapse }: { collapsed: boolea
 
   if (collapsed) {
     return (
-      <div className="w-10 h-full bg-card border-r border-border flex flex-col items-center pt-3 gap-3 shrink-0">
+      <div className="w-10 h-full flex flex-col items-center pt-3 gap-3 shrink-0" style={{ background: '#0a0a0a', borderRight: '1px solid #1e1e1e' }}>
         <button
           onClick={onToggleCollapse}
           title="Expand panel"
@@ -91,7 +91,7 @@ export function LeftSidebar({ collapsed, onToggleCollapse }: { collapsed: boolea
   }
 
   return (
-    <div className="w-[260px] h-full bg-card border-r border-border flex flex-col shrink-0">
+    <div className="w-[260px] h-full flex flex-col shrink-0" style={{ background: '#0a0a0a', borderRight: '1px solid #1e1e1e' }}>
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center px-4 shrink-0 justify-between">
         <div className="flex items-center">

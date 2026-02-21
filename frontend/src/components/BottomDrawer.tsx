@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import type { Hyperparams } from './HyperparamsPanel'
 import { DEFAULT_HYPERPARAMS } from './HyperparamsPanel'
 import type { PresetType } from './PresetChips'
+import { DrawingGrid } from './DrawingGrid'
+import type { DrawingGridRef } from './DrawingGrid'
+import { useModels, useModel } from '../hooks/useModels'
 
 type TabId = 'config' | 'canvas' | 'logs'
 
@@ -40,7 +43,7 @@ function CfgInput({ value, onChange, type = 'number', min, max, step }: {
           if (!isNaN(v)) onChange(v)
         } else onChange(e.target.value)
       }}
-      className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-mono text-white outline-none focus:ring-1 focus:ring-violet-500/40 transition-all text-right"
+      className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-mono text-white outline-none focus:ring-1 focus:ring-cyan-500/40 transition-all text-right"
       style={{ background: '#1c1c1e', border: '1px solid #2a2a2e' }}
     />
   )
@@ -53,7 +56,7 @@ function CfgSelect({ value, onChange, options }: {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="w-20 rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-violet-500/40 transition-all text-right"
+      className="w-20 rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-cyan-500/40 transition-all text-right"
       style={{ background: '#1c1c1e', border: '1px solid #2a2a2e' }}
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -148,14 +151,175 @@ function ConfigTab({ onParamsChange, onPresetSelect }: {
             onClick={() => set('shuffle', !params.shuffle)}
             className="w-20 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-all text-right"
             style={{
-              background: params.shuffle ? '#2d1b69' : '#1c1c1e',
-              border: `1px solid ${params.shuffle ? '#7c3aed44' : '#2a2a2e'}`,
-              color: params.shuffle ? '#a78bfa' : '#555',
+              background: params.shuffle ? '#0c2d3e' : '#1c1c1e',
+              border: `1px solid ${params.shuffle ? '#0891b244' : '#2a2a2e'}`,
+              color: params.shuffle ? '#22d3ee' : '#555',
             }}
           >
             {params.shuffle ? 'On' : 'Off'}
           </button>
         </Row>
+      </div>
+    </div>
+  )
+}
+
+// ── Canvas / Inference tab ────────────────────────────────────────────────────
+
+function CanvasTab() {
+  const { data: models } = useModels()
+  const [selectedModelId, setSelectedModelId] = useState('')
+  const [currentDrawing, setCurrentDrawing] = useState<number[][] | undefined>()
+  const [isRunning, setIsRunning] = useState(false)
+  const [predictionResult, setPredictionResult] = useState<{ prediction: string; confidence: number } | null>(null)
+  const [eraseMode, setEraseMode] = useState(false)
+  const gridRef = useRef<DrawingGridRef>(null)
+
+  const { data: selectedModelDetail } = useModel(selectedModelId || undefined)
+
+  const latestRunId = useMemo(() => {
+    if (!selectedModelDetail?.runs) return ''
+    const succeeded = [...selectedModelDetail.runs]
+      .filter(r => r.state === 'succeeded' && r.saved_model_path)
+      .sort((a, b) => new Date(b.completed_at ?? b.created_at ?? 0).getTime() - new Date(a.completed_at ?? a.created_at ?? 0).getTime())
+    return succeeded[0]?.run_id ?? ''
+  }, [selectedModelDetail])
+
+  const flattenedPixels = useMemo(() => {
+    if (!currentDrawing || currentDrawing.length === 0) return null
+    const flat: number[] = []
+    for (const row of currentDrawing) {
+      for (const val of row) {
+        flat.push(Math.min(1, Math.max(0, (Number.isFinite(val) ? val : 0) / 255)))
+      }
+    }
+    return flat.length === 784 ? flat : null
+  }, [currentDrawing])
+
+  const handleInference = async () => {
+    if (!flattenedPixels || !latestRunId) return
+    setIsRunning(true)
+    try {
+      const res = await fetch('/api/infer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ run_id: latestRunId, pixels: flattenedPixels }),
+      })
+      if (!res.ok) throw new Error('Inference failed')
+      const data = await res.json()
+      const conf = typeof data.label === 'number' ? data.probabilities?.[data.label] : null
+      setPredictionResult({
+        prediction: data.prediction ?? '?',
+        confidence: conf != null ? Math.round(conf * 100) : 0,
+      })
+    } catch {
+      setPredictionResult(null)
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
+  const handleClear = () => {
+    gridRef.current?.clear()
+    setCurrentDrawing(undefined)
+    setPredictionResult(null)
+  }
+
+  const canInfer = !!selectedModelId && !!latestRunId && !!flattenedPixels && !isRunning
+
+  return (
+    <div className="flex h-full gap-6 p-4 overflow-hidden">
+      {/* Left: toolbar + canvas */}
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setEraseMode(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
+            style={!eraseMode ? { background: '#0891b2', color: '#fff' } : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>
+            Brush
+          </button>
+          <button
+            onClick={() => setEraseMode(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
+            style={eraseMode ? { background: '#0891b2', color: '#fff' } : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4L20 11L11 20"/><path d="M10 10L14 14"/></svg>
+            Eraser
+          </button>
+          <button
+            onClick={handleClear}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium ml-2 transition-all"
+            style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Clear
+          </button>
+        </div>
+        {/* Drawing canvas — flex-1 to fill remaining height */}
+        <div className="flex-1 rounded-lg overflow-hidden" style={{ border: '1px solid #1e1e1e', background: '#000', width: 196 }}>
+          <DrawingGrid
+            ref={gridRef}
+            scale={7}
+            eraseMode={eraseMode}
+            onDrawingComplete={(pixels) => {
+              setCurrentDrawing(pixels)
+              setPredictionResult(null)
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="w-px shrink-0" style={{ background: '#1e1e1e' }} />
+
+      {/* Right: model + run + prediction */}
+      <div className="flex gap-6 px-2 h-full items-center">
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-medium mb-0.5" style={{ color: '#555' }}>Select Model</span>
+          <select
+            value={selectedModelId}
+            onChange={e => { setSelectedModelId(e.target.value); setPredictionResult(null) }}
+            className="rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-cyan-500/40"
+            style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', minWidth: 130 }}
+          >
+            <option value="">Select a model…</option>
+            {models?.map(m => (
+              <option key={m.model_id} value={m.model_id}>{m.name}</option>
+            ))}
+          </select>
+          {selectedModelId && !latestRunId && (
+            <span className="text-[10px]" style={{ color: '#ef4444' }}>No saved run found</span>
+          )}
+          <button
+            onClick={handleInference}
+            disabled={!canInfer}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all mt-1"
+            style={canInfer
+              ? { background: '#0891b2', color: '#fff' }
+              : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#444', cursor: 'not-allowed' }
+            }
+          >
+            {isRunning ? (
+              <>
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25"/><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                Running…
+              </>
+            ) : 'Run Inference'}
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #1e1e1e', background: '#0a0a0a' }}>
+          <span className="text-[10px] mb-1" style={{ color: '#555' }}>Prediction</span>
+          {predictionResult ? (
+            <>
+              <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#22d3ee' }}>{predictionResult.prediction}</span>
+              <span className="text-[10px]" style={{ color: '#555' }}>Conf: <span style={{ color: '#34d399' }}>{predictionResult.confidence}%</span></span>
+            </>
+          ) : (
+            <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#222' }}>—</span>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -180,14 +344,14 @@ export function BottomDrawer({
     <div
       className="absolute bottom-0 left-0 right-0 flex flex-col z-20 transition-all duration-200"
       style={{
-        height: collapsed ? 40 : 220,
-        background: '#0d0d10',
-        borderTop: '1px solid #1e1e2e',
+        height: collapsed ? 40 : 300,
+        background: '#0a0a0a',
+        borderTop: '1px solid #1e1e1e',
         boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
       }}
     >
       {/* Header */}
-      <div className="flex items-center h-10 px-2 gap-1 shrink-0" style={{ borderBottom: collapsed ? 'none' : '1px solid #1e1e2e' }}>
+      <div className="flex items-center h-10 px-2 gap-1 shrink-0" style={{ borderBottom: collapsed ? 'none' : '1px solid #1e1e1e' }}>
         {!collapsed && TABS.map(tab => (
           <button
             key={tab.id}
@@ -195,7 +359,7 @@ export function BottomDrawer({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
             style={
               activeTab === tab.id
-                ? { background: '#1c1c2e', color: '#a78bfa' }
+                ? { background: '#0c1f2e', color: '#22d3ee' }
                 : { color: '#555' }
             }
           >
@@ -234,43 +398,7 @@ export function BottomDrawer({
             <ConfigTab onParamsChange={onParamsChange} onPresetSelect={onPresetSelect} />
           )}
           {activeTab === 'canvas' && (
-            <div className="flex h-full gap-6 p-4 overflow-hidden">
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-2">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium" style={{ background: '#7c3aed', color: '#fff' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>
-                    Brush
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium" style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4L20 11L11 20"/><path d="M10 10L14 14"/></svg>
-                    Eraser
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium ml-2" style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Clear
-                  </button>
-                </div>
-                <div className="flex-1 w-[180px] rounded-lg flex items-center justify-center" style={{ border: '1px solid #1e1e2e', background: '#0a0a0a' }}>
-                  <span className="text-[11px]" style={{ color: '#333' }}>Canvas area</span>
-                </div>
-              </div>
-              <div className="w-px" style={{ background: '#1e1e2e' }} />
-              <div className="flex gap-6 px-2 h-full items-center">
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-medium mb-2" style={{ color: '#555' }}>Quick Test</span>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {['A','B','C','D','E','F','G','H','I'].map(c => (
-                      <button key={c} className="w-7 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors hover:text-violet-400" style={{ border: '1px solid #1e1e2e', background: '#111', color: '#555' }}>{c}</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #2a1f4a', background: '#100d1a' }}>
-                  <span className="text-[10px] mb-1" style={{ color: '#555' }}>Prediction</span>
-                  <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#a78bfa' }}>A</span>
-                  <span className="text-[10px]" style={{ color: '#555' }}>Conf: <span style={{ color: '#34d399' }}>92%</span></span>
-                </div>
-              </div>
-            </div>
+            <CanvasTab />
           )}
           {activeTab === 'logs' && (
             <div className="flex items-center justify-center h-full">
