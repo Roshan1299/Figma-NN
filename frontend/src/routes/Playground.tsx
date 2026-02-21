@@ -35,6 +35,7 @@ import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 import { ConnectionPreview } from '@/components/ConnectionPreview'
 import { GridBackground } from '@/components/GridBackground'
+import { AlignmentGuides } from '@/components/AlignmentGuides'
 
 const nodeTypes: NodeTypes = {
   input: InputLayerNode,
@@ -627,6 +628,7 @@ export default function Playground() {
             <GridBackground />
             <Background gap={24} size={1} color="rgba(255, 255, 255, 0.15)" />
             <Controls position="bottom-left" showInteractive={false} className="shadow-lg" />
+            <AlignmentGuides />
             <ConnectionPreview />
             <CollabCursors />
           </ReactFlow>
