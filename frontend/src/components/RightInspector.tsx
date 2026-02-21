@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import type { FC } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { MetricsCharts } from './MetricsCharts'
 import { SamplePredictionCard } from './SamplePredictionCard'
 import type { MetricData, EmnistSample } from '@/api/types'
 import { useGraphStore } from '@/store/graphStore'
-import { useModels } from '@/hooks/useModels'
+import { useModels, useModel } from '@/hooks/useModels'
 import type { AnyLayer, TensorShape } from '@/types/graph'
 
 interface RightInspectorProps {
@@ -318,6 +319,169 @@ function CollapsedStrip({ onToggle, setTab, isTraining }: {
   )
 }
 
+// ── Model Tab ─────────────────────────────────────────────────────────────────
+import type { StoredModel } from '@/hooks/useModels'
+
+const KIND_COLOR: Record<string, string> = {
+  Input: '#10b981', Dense: '#ef4444', Conv2D: '#3b82f6', Linear: '#ef4444',
+  Flatten: '#f97316', Dropout: '#f43f5e', Output: '#eab308', MaxPool2D: '#a855f7',
+}
+
+function ModelCard({ model }: { model: StoredModel }) {
+  const [expanded, setExpanded] = useState(false)
+  // Fetch full model data (with runs + metrics) only when expanded
+  const { data: fullModel } = useModel(expanded ? model.model_id : undefined)
+  const runs = fullModel?.runs ?? model.runs ?? []
+  const bestRun = runs.reduce<typeof runs[0] | null>((best, r) => {
+    const acc = r.metrics.at(-1)?.val_accuracy ?? 0
+    const bestAcc = best ? (best.metrics.at(-1)?.val_accuracy ?? 0) : 0
+    return acc > bestAcc ? r : best
+  }, null)
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1e1e1e' }}>
+      {/* Header row — click to expand */}
+      <button
+        className="w-full flex items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
+        style={{ background: '#111' }}
+        onClick={() => setExpanded(v => !v)}
+      >
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="text-[13px] font-semibold text-white truncate">{model.name}</span>
+          <div className="flex items-center gap-2 text-[11px]" style={{ color: '#555' }}>
+            {model.architecture?.layers && <span>{model.architecture.layers.length} layers</span>}
+            {model.runs_total !== undefined && <span>{model.runs_total} run{model.runs_total !== 1 ? 's' : ''}</span>}
+            {model.created_at && <span>{new Date(model.created_at).toLocaleDateString()}</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 ml-2">
+          {model.highest_accuracy !== undefined && (
+            <span className="text-[12px] font-mono font-bold" style={{ color: '#34d399' }}>
+              {(model.highest_accuracy * 100).toFixed(1)}%
+            </span>
+          )}
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2"
+            className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3" style={{ background: '#0d0d0d', borderTop: '1px solid #1a1a1a' }}>
+          {/* Architecture layers */}
+          {model.architecture?.layers && model.architecture.layers.length > 0 && (
+            <div className="pt-3">
+              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#444' }}>Architecture</p>
+              <div className="space-y-1">
+                {model.architecture.layers.map((l, i) => {
+                  const color = KIND_COLOR[l.type] ?? '#666'
+                  return (
+                    <div key={i} className="flex items-center gap-2 text-[11px]">
+                      <div className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />
+                      <span className="font-mono" style={{ color: '#888' }}>{l.type}</span>
+                      {l.out !== undefined && (
+                        <span className="ml-auto font-mono" style={{ color: '#555' }}>{l.out}</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Best run metrics + charts */}
+          {bestRun && bestRun.metrics.length > 0 && (() => {
+            const last = bestRun.metrics.at(-1)!
+            return (
+              <div className="space-y-3">
+                <p className="text-[10px] uppercase tracking-widest" style={{ color: '#444' }}>Best Run</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { label: 'Val Acc', value: `${(last.val_accuracy * 100).toFixed(1)}%`, color: '#a78bfa' },
+                    { label: 'Val Loss', value: last.val_loss.toFixed(4), color: '#60a5fa' },
+                    { label: 'Epochs', value: String(last.epoch), color: '#888' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="rounded-lg px-2 py-2" style={{ background: '#1a1a1a' }}>
+                      <p className="text-[10px] mb-0.5" style={{ color: '#555' }}>{label}</p>
+                      <p className="text-[11px] font-mono font-semibold" style={{ color }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+                {bestRun.metrics.length > 1 && (
+                  <MetricsCharts metrics={bestRun.metrics} />
+                )}
+              </div>
+            )
+          })()}
+
+          {/* Hyperparams */}
+          {bestRun?.hyperparams && (
+            <div>
+              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#444' }}>Hyperparams</p>
+              <div className="space-y-1">
+                {(['epochs', 'batch_size', 'optimizer', 'learning_rate'] as const).map(k => {
+                  const v = bestRun.hyperparams?.[k]
+                  if (v === undefined) return null
+                  return (
+                    <div key={k} className="flex items-center justify-between text-[11px]">
+                      <span style={{ color: '#555' }}>{k.replace('_', ' ')}</span>
+                      <span className="font-mono" style={{ color: '#888' }}>{String(v)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ModelTab({ savedModels, isLoading }: { savedModels: StoredModel[]; isLoading: boolean }) {
+  return (
+    <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex items-center justify-between mb-4 pt-1">
+        <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#444' }}>Saved Models</p>
+        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: '#1c1c1e', color: '#555' }}>
+          {savedModels.length}
+        </span>
+      </div>
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-10">
+          <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24" style={{ color: '#333' }}>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        </div>
+      )}
+
+      {!isLoading && savedModels.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
+          <svg className="w-10 h-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="#555" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <p className="text-[13px]" style={{ color: '#555' }}>No saved models yet.</p>
+          <p className="text-[11px] mt-1" style={{ color: '#3a3a3a' }}>Train and save a model to see it here.</p>
+        </div>
+      )}
+
+      {!isLoading && savedModels.length > 0 && (
+        <div className="space-y-2">
+          {savedModels.map(model => (
+            <ModelCard key={model.model_id} model={model} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export const RightInspector: FC<RightInspectorProps> = ({
@@ -341,6 +505,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
 
   const { layers, edges, updateLayerParams } = useGraphStore()
   const { data: savedModels, isLoading: modelsLoading } = useModels()
+  const queryClient = useQueryClient()
   const selectedLayer = selectedNodeId ? layers[selectedNodeId] : null
 
   // Find input shape for selected layer (from the edge that connects into it)
@@ -407,6 +572,8 @@ export const RightInspector: FC<RightInspectorProps> = ({
         const data = await res.json()
         setSavedModelId(data.model_id)
         setModelName('')
+        // Immediately refresh the models list in the Model tab
+        await queryClient.invalidateQueries({ queryKey: ['models'] })
       }
     } finally {
       setIsSaving(false)
@@ -613,8 +780,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
 
               {savedModelId && (
                 <div className="p-3 rounded-xl" style={{ border: '1px solid #06543044', background: '#06543022' }}>
-                  <p className="text-xs font-semibold mb-1" style={{ color: '#34d399' }}>Model saved!</p>
-                  <a href={`/models/${savedModelId}`} className="text-xs underline underline-offset-2" style={{ color: '#34d399aa' }}>View model →</a>
+                  <p className="text-xs font-semibold" style={{ color: '#34d399' }}>Model saved! View it in the Model tab.</p>
                 </div>
               )}
 
@@ -673,68 +839,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
 
       {/* ── Model Tab ─────────────────────────────────────────────────────── */}
       {activeTab === 'model' && (
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#444' }}>Saved Models</p>
-            {savedModels && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: '#1c1c1e', color: '#555' }}>
-                {savedModels.length}
-              </span>
-            )}
-          </div>
-
-          {modelsLoading && (
-            <div className="flex items-center justify-center py-10">
-              <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24" style={{ color: '#333' }}>
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            </div>
-          )}
-
-          {!modelsLoading && (!savedModels || savedModels.length === 0) && (
-            <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
-              <svg className="w-10 h-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="#555" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <p className="text-[13px]" style={{ color: '#555' }}>No saved models yet.</p>
-              <p className="text-[11px] mt-1" style={{ color: '#3a3a3a' }}>Train and save a model to see it here.</p>
-            </div>
-          )}
-
-          {savedModels && savedModels.length > 0 && (
-            <div className="space-y-2">
-              {savedModels.map(model => (
-                <a
-                  key={model.model_id}
-                  href={`/models/${model.model_id}`}
-                  className="flex flex-col gap-1.5 p-3 rounded-xl transition-colors block hover:opacity-90"
-                  style={{ background: '#111', border: '1px solid #1e1e1e' }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-semibold text-white truncate">{model.name}</span>
-                    {model.highest_accuracy !== undefined && (
-                      <span className="text-[11px] font-mono font-semibold ml-2 shrink-0" style={{ color: '#34d399' }}>
-                        {(model.highest_accuracy * 100).toFixed(1)}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px]" style={{ color: '#555' }}>
-                    {model.architecture?.layers && (
-                      <span>{model.architecture.layers.length} layers</span>
-                    )}
-                    {model.runs_total !== undefined && (
-                      <span>{model.runs_total} run{model.runs_total !== 1 ? 's' : ''}</span>
-                    )}
-                    {model.created_at && (
-                      <span className="ml-auto">{new Date(model.created_at).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
+        <ModelTab savedModels={savedModels ?? []} isLoading={modelsLoading} />
       )}
     </div>
   )

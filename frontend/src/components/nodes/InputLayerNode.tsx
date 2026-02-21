@@ -16,10 +16,10 @@ export function InputLayerNode({ id, selected }: NodeProps) {
 
       <div className="flex flex-col">
         <span className="text-[13px] font-semibold text-foreground leading-tight">
-          {layer.params.dataset === 'emnist' ? 'EMNIST Input' : layer.params.dataset === 'audio' ? 'Audio Input' : layer.params.dataset === 'text' ? 'Text Input' : 'Input'}
+          {layer.params.dataset === 'emnist' ? 'EMNIST Input' : 'MNIST Input'}
         </span>
         <span className="text-[11px] text-muted-foreground mt-0.5 leading-none">
-          {layer.params.dataset === 'emnist' ? '28x28 grayscale' : layer.params.size + ' features'}
+          {layer.params.dataset === 'emnist' ? '28×28 · letters A-Z' : '28×28 · digits 0-9'}
         </span>
       </div>
 

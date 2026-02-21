@@ -101,9 +101,22 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   edges: [],
 
   addLayer: (layer) => {
-    set((state) => ({
-      layers: { ...state.layers, [layer.id]: layer }
-    }))
+    set((state) => {
+      let newLayers: Record<string, AnyLayer> = { ...state.layers, [layer.id]: layer }
+      // When adding an Input layer, auto-update any existing Output layer's classes
+      if (layer.kind === 'Input' && layer.params.dataset) {
+        const outputClasses = layer.params.dataset === 'emnist' ? 26 : 10
+        const outputEntry = Object.entries(newLayers).find(([, l]) => l.kind === 'Output')
+        if (outputEntry) {
+          const [outId, outLayer] = outputEntry
+          newLayers = {
+            ...newLayers,
+            [outId]: { ...outLayer, params: { ...outLayer.params, classes: outputClasses } } as AnyLayer
+          }
+        }
+      }
+      return { layers: newLayers }
+    })
     get().recomputeShapes()
   },
 
@@ -120,12 +133,25 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       const layer = state.layers[id]
       if (!layer) return state
 
-      return {
-        layers: {
-          ...state.layers,
-          [id]: { ...layer, params: { ...layer.params, ...params } } as AnyLayer
-        } as Record<string, AnyLayer>
+      let updatedLayers: Record<string, AnyLayer> = {
+        ...state.layers,
+        [id]: { ...layer, params: { ...layer.params, ...params } } as AnyLayer
       }
+
+      // When Input layer dataset changes, auto-update Output layer classes
+      if (layer.kind === 'Input' && params.dataset !== undefined) {
+        const outputClasses = params.dataset === 'emnist' ? 26 : 10
+        const outputEntry = Object.entries(updatedLayers).find(([, l]) => l.kind === 'Output')
+        if (outputEntry) {
+          const [outId, outLayer] = outputEntry
+          updatedLayers = {
+            ...updatedLayers,
+            [outId]: { ...outLayer, params: { ...outLayer.params, classes: outputClasses } } as AnyLayer
+          }
+        }
+      }
+
+      return { layers: updatedLayers as Record<string, AnyLayer> }
     })
     get().recomputeShapes()
   },
