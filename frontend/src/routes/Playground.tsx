@@ -114,7 +114,7 @@ function TrainBar({
       <button
         onClick={canCancel ? onCancel : (!isDone && !isFailed ? onTrain : onTrain)}
         disabled={isCancelling || (isTraining && !canCancel)}
-        className="relative flex items-center gap-4 rounded-2xl px-3 py-3 select-none transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+        className="relative flex items-center gap-4 rounded-2xl px-3 py-1.5 select-none transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
         style={{
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
