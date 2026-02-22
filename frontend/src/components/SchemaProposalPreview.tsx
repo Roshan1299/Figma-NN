@@ -24,34 +24,41 @@ interface SchemaProposalNodeData extends Record<string, unknown> {
 type SchemaProposalNode = Node<SchemaProposalNodeData, 'proposal'>
 
 const layerTitles: Record<LayerKind, string> = {
-  Input: 'Input Layer',
-  Dense: 'Dense Layer',
-  Convolution: 'Convolution Layer',
-  Pooling: 'Pooling Layer',
-  Flatten: 'Flatten Layer',
-  Dropout: 'Dropout Layer',
-  BatchNorm: 'Batch Norm Layer',
-  ResidualBlock: 'Residual Block Layer',
-  Output: 'Output Layer',
+  Input: 'Input',
+  Dense: 'Dense',
+  Convolution: 'Conv2D',
+  Pooling: 'Pooling',
+  Flatten: 'Flatten',
+  Dropout: 'Dropout',
+  BatchNorm: 'Batch Norm',
+  ResidualBlock: 'Residual Block',
+  Output: 'Output',
 }
 
 const headerColors: Record<LayerKind, string> = {
-  Input: 'bg-red-500',
-  Dense: 'bg-blue-500',
-  Convolution: 'bg-indigo-500',
-  Pooling: 'bg-teal-500',
-  Flatten: 'bg-amber-500',
-  Dropout: 'bg-rose-500',
-  BatchNorm: 'bg-purple-500',
-  ResidualBlock: 'bg-orange-500',
-  Output: 'bg-emerald-500',
+  Input: '#3b82f6',
+  Dense: '#06b6d4',
+  Convolution: '#f97316',
+  Pooling: '#a855f7',
+  Flatten: '#6b7280',
+  Dropout: '#eab308',
+  BatchNorm: '#14b8a6',
+  ResidualBlock: '#8b5cf6',
+  Output: '#10b981',
+}
+
+const changeBorderColors: Record<ChangeType, string> = {
+  added: '#10b981',
+  removed: '#ef4444',
+  modified: '#f59e0b',
+  unchanged: '#3f3f46',
 }
 
 const changeBadgeStyles: Record<ChangeType, string> = {
-  added: 'bg-green-100 text-green-700 border-green-200',
-  removed: 'bg-red-100 text-red-700 border-red-200',
-  modified: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  unchanged: 'bg-gray-100 text-gray-600 border-gray-200',
+  added: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  removed: 'bg-red-500/20 text-red-400 border-red-500/30',
+  modified: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  unchanged: 'bg-zinc-700/50 text-zinc-400 border-zinc-600/30',
 }
 
 function describeLayer(layer: AnyLayer): Array<{ label: string; value: string }> {
@@ -60,10 +67,7 @@ function describeLayer(layer: AnyLayer): Array<{ label: string; value: string }>
       return [
         { label: 'Size', value: `${layer.params.size}` },
         layer.params.channels && layer.params.height && layer.params.width
-          ? {
-            label: 'Shape',
-            value: `${layer.params.channels}×${layer.params.height}×${layer.params.width}`,
-          }
+          ? { label: 'Shape', value: `${layer.params.channels}x${layer.params.height}x${layer.params.width}` }
           : { label: 'Shape', value: 'Vector' },
       ]
     case 'Dense':
@@ -74,8 +78,7 @@ function describeLayer(layer: AnyLayer): Array<{ label: string; value: string }>
     case 'Convolution':
       return [
         { label: 'Filters', value: `${layer.params.filters}` },
-        { label: 'Kernel', value: `${layer.params.kernel}×${layer.params.kernel}` },
-        { label: 'Stride', value: `${layer.params.stride}` },
+        { label: 'Kernel', value: `${layer.params.kernel}x${layer.params.kernel}` },
         { label: 'Padding', value: layer.params.padding },
         { label: 'Activation', value: layer.params.activation },
       ]
@@ -104,33 +107,42 @@ function SchemaProposalNodeView({ data }: NodeProps<SchemaProposalNode>) {
   if (!layer) return null
 
   const changeType = data.changeType ?? 'unchanged'
+  const headerColor = headerColors[layer.kind]
 
   return (
     <>
-      <Handle type="target" position={Position.Left} />
-      <div className="relative bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden min-w-[180px]">
-        <div className={`px-3 py-1.5 text-xs font-semibold text-white ${headerColors[layer.kind]}`}>
-          {layerTitles[layer.kind]}
-        </div>
-
-        <div className="absolute top-2 right-2">
-          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${changeBadgeStyles[changeType]}`}>
+      <Handle type="target" position={Position.Left} style={{ background: '#3ecfcf', border: 'none', width: 8, height: 8 }} />
+      <div className="relative overflow-hidden min-w-[160px]" style={{ background: '#1e1e1e', borderRadius: 10 }}>
+        {/* Colored top strip */}
+        <div
+          className="px-3 py-1.5 flex items-center justify-between"
+          style={{ background: headerColor + '22', borderBottom: `1px solid ${headerColor}44` }}
+        >
+          <span className="text-[11px] font-semibold" style={{ color: headerColor }}>
+            {layerTitles[layer.kind]}
+          </span>
+          <span className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-full border ${changeBadgeStyles[changeType]}`}>
             {changeType.charAt(0).toUpperCase() + changeType.slice(1)}
           </span>
         </div>
 
-        <div className="p-3 space-y-1.5 text-xs text-gray-700">
+        {/* Params */}
+        <div className="p-2.5 space-y-1">
           {describeLayer(layer).map((item) => (
-            <div key={item.label}>
-              <span className="font-medium">{item.label}:</span> {item.value}
+            <div key={item.label} className="flex justify-between gap-3 text-[11px]">
+              <span style={{ color: '#888' }}>{item.label}</span>
+              <span className="font-medium text-white">{item.value}</span>
             </div>
           ))}
-          <div className="pt-1 text-gray-600">
-            <span className="font-medium">Output:</span> {formatShape(layer.shapeOut)}
-          </div>
+          {layer.shapeOut && (
+            <div className="flex justify-between gap-3 text-[11px] pt-0.5" style={{ borderTop: '1px solid #2a2a2a' }}>
+              <span style={{ color: '#888' }}>Out</span>
+              <span className="font-medium" style={{ color: '#3ecfcf' }}>{formatShape(layer.shapeOut)}</span>
+            </div>
+          )}
         </div>
       </div>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} style={{ background: '#3ecfcf', border: 'none', width: 8, height: 8 }} />
     </>
   )
 }
@@ -169,75 +181,53 @@ export function SchemaProposalPreview({
   onReject,
 }: SchemaProposalPreviewProps) {
   const { currentNodes, proposedNodes } = useMemo(() => {
-    // Detect layer changes
     const layerChanges = new Map<string, ChangeType>()
 
-    // Check for removed and modified layers
     Object.keys(currentLayers).forEach((id) => {
       if (!proposedLayers[id]) {
         layerChanges.set(id, 'removed')
       } else {
-        // Check if layer was modified
         const current = currentLayers[id]
         const proposed = proposedLayers[id]
         const isModified =
           current.kind !== proposed.kind ||
           JSON.stringify(current.params) !== JSON.stringify(proposed.params)
-
         layerChanges.set(id, isModified ? 'modified' : 'unchanged')
       }
     })
 
-    // Check for added layers
     Object.keys(proposedLayers).forEach((id) => {
       if (!currentLayers[id]) {
         layerChanges.set(id, 'added')
       }
     })
 
-    const getNodeColor = (changeType: ChangeType): string => {
-      switch (changeType) {
-        case 'added':
-          return '#10b981' // green
-        case 'removed':
-          return '#ef4444' // red
-        case 'modified':
-          return '#f59e0b' // yellow
-        default:
-          return '#6b7280' // gray
-      }
-    }
-
     const createNodes = (layers: Record<string, AnyLayer>): Node[] => {
       return Object.values(layers).map((layer, index) => {
         const changeType = layerChanges.get(layer.id) || 'unchanged'
-        const borderColor = getNodeColor(changeType)
-        const nodeType = layerKindToNodeType[layer.kind]
+        const borderColor = changeBorderColors[changeType]
 
         return {
           id: layer.id,
-          type: nodeType,
-          position: layer.position ?? { x: index * 300 + 50, y: 250 },
-          data: {
-            layer,
-            changeType,
-          },
+          type: 'proposal' as keyof typeof layerKindToNodeType,
+          position: layer.position ?? { x: index * 260 + 50, y: 200 },
+          data: { layer, changeType },
           draggable: false,
           style: {
             background: 'transparent',
-            border: `3px solid ${borderColor}`,
-            borderRadius: '8px',
+            border: `2px solid ${borderColor}`,
+            borderRadius: 12,
             padding: 0,
-            boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px ${borderColor}33`,
+            boxShadow: changeType !== 'unchanged' ? `0 0 12px ${borderColor}40` : 'none',
           },
         }
       })
     }
 
-    const currentNodes = createNodes(currentLayers)
-    const proposedNodes = createNodes(proposedLayers)
-
-    return { currentNodes, proposedNodes }
+    return {
+      currentNodes: createNodes(currentLayers),
+      proposedNodes: createNodes(proposedLayers),
+    }
   }, [currentLayers, proposedLayers])
 
   const { currentReactFlowEdges, proposedReactFlowEdges } = useMemo(() => {
@@ -248,17 +238,16 @@ export function SchemaProposalPreview({
       return trimmed
     }
 
-    const createEdges = (edges: GraphEdge[]): Edge[] => {
-      return edges.map((edge) => ({
+    const createEdges = (edges: GraphEdge[]): Edge[] =>
+      edges.map((edge) => ({
         id: edge.id,
         source: edge.source,
         target: edge.target,
         sourceHandle: sanitizeHandle(edge.sourceHandle),
         targetHandle: sanitizeHandle(edge.targetHandle),
-        label: edge.label,
         animated: true,
+        style: { stroke: '#3ecfcf', strokeWidth: 1.5, opacity: 0.6 },
       }))
-    }
 
     return {
       currentReactFlowEdges: createEdges(currentEdges),
@@ -267,42 +256,43 @@ export function SchemaProposalPreview({
   }, [currentEdges, proposedEdges])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6 sm:p-10">
-      <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+      <div
+        className="w-full h-full max-w-6xl flex flex-col overflow-hidden"
+        style={{ background: '#141414', border: '1px solid #2a2a2a', borderRadius: 16, maxHeight: '90vh' }}
+      >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Architecture Proposal</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Review the proposed changes to your neural network architecture
-          </p>
-          <div className="flex gap-4 mt-4 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span>Added</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span>Modified</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span>Removed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-500 rounded"></div>
-              <span>Unchanged</span>
-            </div>
+        <div className="flex items-start justify-between px-6 py-4 shrink-0" style={{ borderBottom: '1px solid #2a2a2a' }}>
+          <div>
+            <h2 className="text-base font-semibold text-white">Architecture Proposal</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#888' }}>Review the proposed changes before applying them to your canvas</p>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-[11px] mt-0.5">
+            {[
+              { label: 'Added', color: '#10b981' },
+              { label: 'Modified', color: '#f59e0b' },
+              { label: 'Removed', color: '#ef4444' },
+              { label: 'Unchanged', color: '#3f3f46' },
+            ].map(({ label, color }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: color }} />
+                <span style={{ color: '#888' }}>{label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Side by side comparison */}
-        <div className="flex-1 flex overflow-hidden">
+        {/* Side by side */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
           {/* Current */}
-          <div className="flex-1 flex flex-col border-r border-gray-200">
-            <div className="p-4 bg-gray-50 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">Current Architecture</h3>
+          <div className="flex-1 flex flex-col" style={{ borderRight: '1px solid #2a2a2a' }}>
+            <div className="px-4 py-2.5 shrink-0 flex items-center gap-2" style={{ borderBottom: '1px solid #2a2a2a', background: '#1a1a1a' }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#6b7280' }} />
+              <span className="text-xs font-medium" style={{ color: '#aaa' }}>Current Architecture</span>
             </div>
-            <div className="flex-1 min-h-[24rem]">
+            <div className="flex-1" style={{ background: '#111' }}>
               <ReactFlow
                 nodes={currentNodes}
                 edges={currentReactFlowEdges}
@@ -311,19 +301,21 @@ export function SchemaProposalPreview({
                 nodesDraggable={false}
                 nodesConnectable={false}
                 elementsSelectable={false}
+                proOptions={{ hideAttribution: true }}
               >
-                <Background />
-                <Controls showInteractive={false} />
+                <Background color="#2a2a2a" gap={20} />
+                <Controls showInteractive={false} style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 8 }} />
               </ReactFlow>
             </div>
           </div>
 
           {/* Proposed */}
           <div className="flex-1 flex flex-col">
-            <div className="p-4 bg-blue-50 border-b border-blue-200">
-              <h3 className="font-semibold text-blue-900">Proposed Architecture</h3>
+            <div className="px-4 py-2.5 shrink-0 flex items-center gap-2" style={{ borderBottom: '1px solid #2a2a2a', background: '#1a1a1a' }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#3ecfcf' }} />
+              <span className="text-xs font-medium" style={{ color: '#3ecfcf' }}>Proposed Architecture</span>
             </div>
-            <div className="flex-1 min-h-[24rem]">
+            <div className="flex-1" style={{ background: '#111' }}>
               <ReactFlow
                 nodes={proposedNodes}
                 edges={proposedReactFlowEdges}
@@ -332,25 +324,32 @@ export function SchemaProposalPreview({
                 nodesDraggable={false}
                 nodesConnectable={false}
                 elementsSelectable={false}
+                proOptions={{ hideAttribution: true }}
               >
-                <Background />
-                <Controls showInteractive={false} />
+                <Background color="#2a2a2a" gap={20} />
+                <Controls showInteractive={false} style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', borderRadius: 8 }} />
               </ReactFlow>
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 shrink-0" style={{ borderTop: '1px solid #2a2a2a', background: '#1a1a1a' }}>
           <button
             onClick={onReject}
-            className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold rounded-lg transition-colors cursor-pointer"
+            className="px-5 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            style={{ background: '#2a2a2a', color: '#aaa', border: '1px solid #333' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#333')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#2a2a2a')}
           >
-            Reject
+            Discard
           </button>
           <button
             onClick={onApply}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors cursor-pointer"
+            className="px-5 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            style={{ background: '#3ecfcf', color: '#0a0a0a' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#2ab8b8')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#3ecfcf')}
           >
             Apply Changes
           </button>
