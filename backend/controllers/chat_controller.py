@@ -100,13 +100,9 @@ def _stream_openai(messages, api_key):
         stream=True,
         temperature=0.7,
     )
-    full_response = ""
     for chunk in stream:
         if chunk.choices[0].delta.content:
-            token = chunk.choices[0].delta.content
-            full_response += token
-            yield token
-    return full_response
+            yield chunk.choices[0].delta.content
 
 
 def _stream_anthropic(messages, api_key):
