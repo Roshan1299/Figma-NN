@@ -1,5 +1,7 @@
 # Figma NN: Visual Neural Network Builder
 
+![Figma NN Canvas](./screenshots/canvas.png)
+
 Figma NN is a browser-based tool for building, training, and sharing neural networks through a drag-and-drop canvas interface. Built for Hacked 26.
 
 It targets people who understand machine learning conceptually but want to iterate on architectures without writing boilerplate code. Design a network visually, hit train, and get real results, then share it or export the PyTorch code.
