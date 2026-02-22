@@ -670,7 +670,8 @@ export const RightInspector: FC<RightInspectorProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg h-8 text-[12px] font-medium transition-all"
+              title={tab.label}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg h-8 text-[12px] font-medium transition-all min-w-0"
               style={
                 activeTab === tab.id
                   ? { background: '#252528', color: '#fff' }
@@ -678,9 +679,11 @@ export const RightInspector: FC<RightInspectorProps> = ({
               }
             >
               {tab.icon}
-              {tab.label}
+              {activeTab === tab.id && (
+                <span className="truncate">{tab.label}</span>
+              )}
               {tab.id === 'metrics' && isTraining && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
               )}
             </button>
           ))}
