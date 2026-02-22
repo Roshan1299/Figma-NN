@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getMarketplaceModel } from '../api/marketplace';
 import type { MarketplaceModelDetail } from '../types/marketplace';
 import { useMarketplaceStore } from '../store/marketplaceStore';
+import { Identicon } from '../components/Identicon';
 
 export default function MarketplaceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -61,9 +62,7 @@ export default function MarketplaceDetail() {
             ))}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-400">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold tracking-wider shadow-lg">
-              {model.authorName.charAt(0).toUpperCase()}
-            </div>
+            <Identicon name={model.authorName} size={32} />
             <span>
               Published by <span className="font-medium text-white">{model.authorName}</span> on {new Date(model.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric'})}
             </span>

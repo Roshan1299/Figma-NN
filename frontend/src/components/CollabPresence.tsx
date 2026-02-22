@@ -1,4 +1,5 @@
 import { useCollabStore } from '@/store/collabStore'
+import { Identicon } from './Identicon'
 
 export function CollabPresence() {
   const localUser = useCollabStore((s) => s.localUser)
@@ -17,22 +18,18 @@ export function CollabPresence() {
       {visible.map((user, index) => {
         const isLocal = user.userId === localUser.userId
         return (
-          <div
+          <Identicon
             key={user.userId}
+            name={user.name}
+            size={28}
             title={user.name}
-            style={{
-              backgroundColor: user.color,
-              boxShadow: isLocal ? `0 0 0 2px white, 0 0 0 3px ${user.color}` : undefined,
-              zIndex: MAX_VISIBLE - index,
-            }}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold relative"
-          >
-            {user.name.charAt(0).toUpperCase()}
-          </div>
+            ring={isLocal}
+            style={{ zIndex: MAX_VISIBLE - index, position: 'relative' }}
+          />
         )
       })}
       {overflow > 0 && (
-        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-400 text-white text-xs font-bold">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-white/10 text-white/70 text-[11px] font-semibold border border-white/20">
           +{overflow}
         </div>
       )}
