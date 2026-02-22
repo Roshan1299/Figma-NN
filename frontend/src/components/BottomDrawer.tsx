@@ -281,98 +281,118 @@ function CanvasTab() {
   const canInfer = !!selectedModelId && !!latestRunId && !!flattenedPixels && !isRunning
 
   return (
-    <div className="flex h-full gap-6 p-4 overflow-hidden">
-      {/* Left: toolbar + canvas */}
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setEraseMode(false)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
-            style={!eraseMode ? { background: '#0891b2', color: '#fff' } : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>
-            Brush
-          </button>
-          <button
-            onClick={() => setEraseMode(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
-            style={eraseMode ? { background: '#0891b2', color: '#fff' } : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4L20 11L11 20"/><path d="M10 10L14 14"/></svg>
-            Eraser
-          </button>
-          <button
-            onClick={handleClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium ml-2 transition-all"
-            style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Clear
-          </button>
-        </div>
-        {/* Drawing canvas — flex-1 to fill remaining height */}
-        <div className="flex-1 rounded-lg overflow-hidden" style={{ border: '1px solid #1e1e1e', background: '#000', width: 196 }}>
-          <DrawingGrid
-            ref={gridRef}
-            scale={7}
-            eraseMode={eraseMode}
-            onDrawingComplete={(pixels) => {
-              setCurrentDrawing(pixels)
-              setPredictionResult(null)
-            }}
-          />
-        </div>
+    <div className="flex h-full items-center justify-center gap-5 px-6 overflow-hidden">
+      {/* Tool buttons — vertical strip */}
+      <div className="flex flex-col gap-1.5 shrink-0">
+        <button
+          title="Brush"
+          onClick={() => setEraseMode(false)}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+          style={!eraseMode
+            ? { background: '#0c2d3e', border: '1px solid #0891b244', color: '#22d3ee' }
+            : { background: '#161618', border: '1px solid #2a2a2e', color: '#555' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+        </button>
+        <button
+          title="Eraser"
+          onClick={() => setEraseMode(true)}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+          style={eraseMode
+            ? { background: '#0c2d3e', border: '1px solid #0891b244', color: '#22d3ee' }
+            : { background: '#161618', border: '1px solid #2a2a2e', color: '#555' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4L20 11L11 20"/><path d="M10 10L14 14"/></svg>
+        </button>
+        <div className="w-full h-px my-0.5" style={{ background: '#2a2a2e' }} />
+        <button
+          title="Clear"
+          onClick={handleClear}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+          style={{ background: '#161618', border: '1px solid #2a2a2e', color: '#555' }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
       </div>
 
-      <div className="w-px shrink-0" style={{ background: '#1e1e1e' }} />
+      {/* Canvas */}
+      <div className="rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid #222', boxShadow: '0 0 0 4px #0a0a0a', lineHeight: 0 }}>
+        <DrawingGrid
+          ref={gridRef}
+          scale={8}
+          eraseMode={eraseMode}
+          onDrawingComplete={(pixels) => {
+            setCurrentDrawing(pixels)
+            setPredictionResult(null)
+          }}
+        />
+      </div>
 
-      {/* Right: model + run + prediction */}
-      <div className="flex gap-6 px-2 h-full items-center">
-        <div className="flex flex-col gap-2">
-          <span className="text-[11px] font-medium mb-0.5" style={{ color: '#555' }}>Select Model</span>
-          <select
-            value={selectedModelId}
-            onChange={e => { setSelectedModelId(e.target.value); setPredictionResult(null) }}
-            className="rounded-lg px-2 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-cyan-500/40"
-            style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', minWidth: 130 }}
-          >
-            <option value="">Select a model…</option>
-            {models?.map(m => (
-              <option key={m.model_id} value={m.model_id}>{m.name}</option>
-            ))}
-          </select>
-          {selectedModelId && !latestRunId && (
-            <span className="text-[10px]" style={{ color: '#ef4444' }}>No saved run found</span>
-          )}
-          <button
-            onClick={handleInference}
-            disabled={!canInfer}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all mt-1"
-            style={canInfer
-              ? { background: '#0891b2', color: '#fff' }
-              : { background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#444', cursor: 'not-allowed' }
-            }
-          >
-            {isRunning ? (
-              <>
-                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25"/><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                Running…
-              </>
-            ) : 'Run Inference'}
-          </button>
-        </div>
+      {/* Divider */}
+      <div className="w-px self-stretch shrink-0 my-4" style={{ background: '#1e1e1e' }} />
 
-        <div className="flex flex-col items-center justify-center rounded-xl p-5 min-w-[120px]" style={{ border: '1px solid #1e1e1e', background: '#0a0a0a' }}>
-          <span className="text-[10px] mb-1" style={{ color: '#555' }}>Prediction</span>
-          {predictionResult ? (
+      {/* Model selector + run button */}
+      <div className="flex flex-col gap-2 shrink-0 w-[150px]">
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#444' }}>Model</span>
+        <select
+          value={selectedModelId}
+          onChange={e => { setSelectedModelId(e.target.value); setPredictionResult(null) }}
+          className="rounded-lg px-2.5 py-1.5 text-[12px] text-white outline-none appearance-none cursor-pointer focus:ring-1 focus:ring-cyan-500/30 w-full"
+          style={{ background: '#161618', border: '1px solid #2a2a2e' }}
+        >
+          <option value="">Select a model…</option>
+          {models?.map(m => (
+            <option key={m.model_id} value={m.model_id}>{m.name}</option>
+          ))}
+        </select>
+        {selectedModelId && !latestRunId && (
+          <span className="text-[10px]" style={{ color: '#ef4444' }}>No trained run found</span>
+        )}
+        <button
+          onClick={handleInference}
+          disabled={!canInfer}
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
+          style={canInfer
+            ? { background: '#0891b2', color: '#fff', boxShadow: '0 0 12px #0891b244' }
+            : { background: '#161618', border: '1px solid #2a2a2e', color: '#333', cursor: 'not-allowed' }
+          }
+        >
+          {isRunning ? (
             <>
-              <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#22d3ee' }}>{predictionResult.prediction}</span>
-              <span className="text-[10px]" style={{ color: '#555' }}>Conf: <span style={{ color: '#34d399' }}>{predictionResult.confidence}%</span></span>
+              <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25"/><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              Running…
             </>
           ) : (
-            <span className="text-4xl font-bold font-mono mb-1" style={{ color: '#222' }}>—</span>
+            <>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Inference
+            </>
           )}
-        </div>
+        </button>
+      </div>
+
+      {/* Prediction result */}
+      <div
+        className="flex flex-col items-center justify-center rounded-2xl shrink-0 transition-all"
+        style={{
+          width: 88,
+          height: 88,
+          border: predictionResult ? '1px solid #0891b244' : '1px solid #1e1e1e',
+          background: predictionResult ? '#05151c' : '#0d0d0d',
+        }}
+      >
+        {predictionResult ? (
+          <>
+            <span className="text-4xl font-bold font-mono leading-none" style={{ color: '#22d3ee' }}>
+              {predictionResult.prediction}
+            </span>
+            <span className="text-[10px] mt-1.5" style={{ color: '#34d399' }}>
+              {predictionResult.confidence}%
+            </span>
+          </>
+        ) : (
+          <span className="text-3xl font-bold font-mono" style={{ color: '#1e1e1e' }}>—</span>
+        )}
       </div>
     </div>
   )

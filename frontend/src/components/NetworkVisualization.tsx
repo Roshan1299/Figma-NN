@@ -311,7 +311,7 @@ function buildNodesAndEdges(
           target: targetId,
           type: 'straight',
           animated: false,
-          style: { stroke: '#1f293780', strokeWidth: 1 },
+          style: { stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 },
         })
       })
     })
@@ -328,22 +328,22 @@ function NeuronNode(props: NodeProps) {
   const highlighted = !!data.highlighted
 
   const baseClasses =
-    'relative flex h-12 w-12 items-center justify-center rounded-full border-4 shadow-sm transition-colors text-sm'
+    'relative flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors text-sm'
   const visualClasses = highlighted
-    ? 'border-blue-500 bg-blue-100 text-blue-900 ring-2 ring-blue-200'
-    : 'border-orange-300 bg-white text-slate-700'
+    ? 'border-primary bg-primary/20 ring-2 ring-primary/30'
+    : 'border-white/20 bg-white/5'
 
   return (
     <div className={`${baseClasses} ${visualClasses}`}>
       <Handle
         type="source"
         position={Position.Right}
-        className={`h-2.5! w-2.5! border-0! ${highlighted ? 'bg-blue-400!' : 'bg-orange-300!'}`}
+        className={`h-2! w-2! border-0! ${highlighted ? 'bg-primary!' : 'bg-white/30!'}`}
       />
       <Handle
         type="target"
         position={Position.Left}
-        className={`h-2.5! w-2.5! border-0! ${highlighted ? 'bg-blue-400!' : 'bg-orange-300!'}`}
+        className={`h-2! w-2! border-0! ${highlighted ? 'bg-primary!' : 'bg-white/30!'}`}
       />
     </div>
   )
@@ -353,22 +353,22 @@ function OutputNeuronNode(props: NodeProps) {
   const data = props.data as NeuronNodeData
   const highlighted = !!data.highlighted
   const baseClasses =
-    'relative flex h-24 w-24 items-center  justify-center rounded-full border-4 shadow-md transition-colors text-2xl font-semibold'
+    'relative flex h-20 w-20 items-center justify-center rounded-full border-2 transition-colors text-xl font-bold'
   const visualClasses = highlighted
-    ? 'border-blue-500 bg-blue-100 text-blue-900 ring-2 ring-blue-200'
-    : 'border-slate-400 bg-white text-slate-800'
+    ? 'border-primary bg-primary/20 text-primary ring-2 ring-primary/30 shadow-[0_0_16px_rgba(139,92,246,0.4)]'
+    : 'border-white/15 bg-white/5 text-white/50'
 
   return (
     <div className={`${baseClasses} ${visualClasses}`}>
       <Handle
         type="target"
         position={Position.Left}
-        className={`!h-3 !w-3 !border-0 ${highlighted ? '!bg-blue-500' : '!bg-slate-500'}`}
+        className={`!h-2.5 !w-2.5 !border-0 ${highlighted ? '!bg-primary' : '!bg-white/20'}`}
       />
       <span>
-        {data.sampledIndex <= 9 ? 
-          String.fromCharCode(48 + Math.min(9, Math.max(0, data.sampledIndex))) : // Digits 0-9
-          String.fromCharCode(65 + Math.min(25, Math.max(0, data.sampledIndex - 10)))} {/* Letters A-Z */}
+        {data.sampledIndex <= 9 ?
+          String.fromCharCode(48 + Math.min(9, Math.max(0, data.sampledIndex))) :
+          String.fromCharCode(65 + Math.min(25, Math.max(0, data.sampledIndex - 10)))}
       </span>
     </div>
   )
@@ -378,17 +378,17 @@ function OperationNode(props: NodeProps) {
   const data = props.data as OperationNodeData
 
   return (
-    <div className="flex h-16 w-32 flex-col items-center justify-center rounded-xl border-2 border-slate-300 bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm">
+    <div className="flex h-14 w-28 flex-col items-center justify-center rounded-xl border border-white/15 bg-white/5 text-xs font-semibold text-white/60 backdrop-blur">
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-2.5 !w-2.5 !border-0 !bg-slate-400"
+        className="!h-2 !w-2 !border-0 !bg-white/30"
       />
-      <span className="uppercase text-lg font-bold tracking-wide">{data.label}</span>
+      <span className="uppercase text-xs font-bold tracking-wider">{data.label}</span>
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-2.5 !w-2.5 !border-0 !bg-slate-400"
+        className="!h-2 !w-2 !border-0 !bg-white/30"
       />
     </div>
   )
@@ -400,13 +400,13 @@ function InputNeuronNode(props: NodeProps) {
 
   return (
     <div
-      className="flex h-[32px] w-[32px] items-center justify-center rounded-full border border-slate-300 shadow-sm"
+      className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-white/10"
       style={{ backgroundColor: color }}
     >
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-2.5 !w-2.5 !border-0 !bg-slate-400"
+        className="!h-2 !w-2 !border-0 !bg-white/30"
       />
     </div>
   )
@@ -414,16 +414,16 @@ function InputNeuronNode(props: NodeProps) {
 
 function ConvNeuronNode(_props: NodeProps) {
   return (
-    <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-indigo-400 bg-white shadow-sm">
+    <div className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-cyan-500/40 bg-cyan-500/10">
       <Handle
         type="target"
         position={Position.Left}
-        className="!h-2.5 !w-2.5 !border-0 !bg-indigo-400"
+        className="!h-2 !w-2 !border-0 !bg-cyan-500/60"
       />
       <Handle
         type="source"
         position={Position.Right}
-        className="!h-2.5 !w-2.5 !border-0 !bg-indigo-400"
+        className="!h-2 !w-2 !border-0 !bg-cyan-500/60"
       />
     </div>
   )
@@ -446,7 +446,7 @@ export function NetworkVisualization({ layers, currentDrawing, activeOutput }: N
   )
 
   return (
-    <div className="relative h-[520px] w-full rounded-xl border border-slate-200 bg-white">
+    <div className="relative h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -460,39 +460,34 @@ export function NetworkVisualization({ layers, currentDrawing, activeOutput }: N
         edgesFocusable={false}
         zoomOnDoubleClick={false}
         proOptions={{ hideAttribution: true }}
+        className="bg-background"
       >
-        <Background gap={24} color="#e2e8f0" />
-        <Controls showInteractive={false} className="rounded-lg border border-slate-200 bg-white shadow-sm" />
+        <Background gap={24} size={1} color="rgba(255,255,255,0.06)" />
+        <Controls showInteractive={false} className="shadow-lg" />
         <Panel
           position="top-center"
-          className="pointer-events-none w-full px-6 pt-4"
+          className="pointer-events-none px-4 pt-3"
           style={{ width: '100%', left: '50%', transform: 'translate(-50%, 0)' }}
         >
-          <div className="pointer-events-auto flex w-full flex-col rounded-xl border border-slate-200 bg-white/95 px-6 py-3 text-xs text-slate-600 shadow-sm backdrop-blur">
-            <p className="text-center text-xs font-light italic text-slate-400">Each node represents 8 neurons</p>
-
-            <ul className="mt-2 grid grid-cols-2 gap-x-4 justify-items-center gap-y-1 sm:grid-cols-4 lg:grid-cols-5">
-            <li className="flex items-center gap-2">
-              <span className="inline-flex h-3 w-3 rounded-full bg-slate-900" />
-              <span>Input pixels</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="inline-flex h-3 w-3 rounded-full border border-orange-300" />
-              <span>Dense neurons</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="inline-flex h-3 w-3 rounded-full border border-indigo-400 bg-white" />
-              <span>Convolutional Neurons</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="inline-flex h-3 w-5 rounded bg-slate-200 border border-slate-400" />
-              <span>Operations </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="inline-flex h-px w-6 bg-slate-500/60" />
-              <span>Connections</span>
-            </li>
-            </ul>
+          <div className="pointer-events-auto inline-flex items-center gap-4 rounded-xl border border-white/10 bg-black/40 px-5 py-2 text-[11px] text-white/50 backdrop-blur-xl shadow-lg mx-auto">
+            <span className="italic text-white/30">Each node ≈ 8 neurons</span>
+            <span className="w-px h-3 bg-white/10" />
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-white/60" />
+              Input
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full border border-white/20 bg-white/5" />
+              Dense
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full border border-cyan-500/50 bg-cyan-500/10" />
+              Conv
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex h-2.5 w-4 rounded bg-white/5 border border-white/15" />
+              Op
+            </span>
           </div>
         </Panel>
       </ReactFlow>

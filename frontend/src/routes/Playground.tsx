@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import type { DragEvent } from 'react'
 import {
   ReactFlow,
@@ -36,6 +37,7 @@ import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 import { useMarketplaceStore } from '@/store/marketplaceStore'
+import { getMarketplaceModel } from '@/api/marketplace'
 import { parseArchitectureToGraph } from '@/lib/architectureParser'
 import { ConnectionPreview } from '@/components/ConnectionPreview'
 import { GridBackground } from '@/components/GridBackground'
@@ -204,6 +206,7 @@ function generateLayerId(kind: LayerKind) {
 }
 
 export default function Playground() {
+  const { id: marketplaceId } = useParams<{ id: string }>()
   const { layers, edges, addLayer, addEdge, removeEdge, updateLayerPosition, removeLayer, applyProposedSchema, loadGraph, undo, redo, canUndo, canRedo } = useGraphStore()
   const [hyperparams, setHyperparams] = useState<Hyperparams>(DEFAULT_HYPERPARAMS)
   const [showProposalPreview, setShowProposalPreview] = useState(false)
@@ -572,31 +575,42 @@ export default function Playground() {
     }
   }, [layers, edges])
 
-  const { importedArchitecture, clearImportedArchitecture } = useMarketplaceStore()
+  const { importedArchitecture, clearImportedArchitecture, setActiveModel } = useMarketplaceStore()
 
   useEffect(() => {
+    if (!reactFlowInstance) return
+
     if (importedArchitecture) {
+      // Normal import flow — architecture already in memory (came from MarketplaceDetail)
       try {
-        const parsedLayout = parseArchitectureToGraph(importedArchitecture);
-        loadGraph(parsedLayout.layers, parsedLayout.edges);
-        clearImportedArchitecture();
-        if (reactFlowInstance) {
-          setTimeout(() => {
-             reactFlowInstance.fitView({ padding: 0.15, duration: 500 });
-          }, 100);
-        }
+        const parsedLayout = parseArchitectureToGraph(importedArchitecture)
+        loadGraph(parsedLayout.layers, parsedLayout.edges)
+        clearImportedArchitecture()
+        setTimeout(() => reactFlowInstance.fitView({ padding: 0.15, duration: 500 }), 100)
       } catch (e) {
-        console.error("Failed to parse imported architecture:", e);
-        clearImportedArchitecture();
+        console.error('Failed to parse imported architecture:', e)
+        clearImportedArchitecture()
       }
+    } else if (marketplaceId) {
+      // Refresh scenario — URL has an id but memory is gone; re-fetch from API
+      getMarketplaceModel(marketplaceId)
+        .then((model) => {
+          setActiveModel(model.name, 'marketplace', marketplaceId)
+          const parsedLayout = parseArchitectureToGraph(model.architecture)
+          loadGraph(parsedLayout.layers, parsedLayout.edges)
+          setTimeout(() => reactFlowInstance.fitView({ padding: 0.15, duration: 500 }), 100)
+        })
+        .catch(() => {
+          // Model not found — fall back to blank
+          const blank = getPresetGraph('blank')
+          loadGraph(blank.layers, blank.edges)
+        })
     } else if (Object.keys(layers).length === 0) {
       const blankPreset = getPresetGraph('blank')
       loadGraph(blankPreset.layers, blankPreset.edges)
-      if (reactFlowInstance) {
-        reactFlowInstance.setViewport({ x: 120, y: 0, zoom: 0.85 }, { duration: 300 })
-        reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
-      }
-    } else if (reactFlowInstance) {
+      reactFlowInstance.setViewport({ x: 120, y: 0, zoom: 0.85 }, { duration: 300 })
+      reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
+    } else {
       reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
