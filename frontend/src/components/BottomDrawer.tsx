@@ -98,6 +98,9 @@ function ConfigTab({ onParamsChange, onPresetSelect }: {
     { id: 'blank', label: 'Empty' },
     { id: 'simple', label: 'Linear' },
     { id: 'complex', label: 'Deep CNN' },
+    { id: 'deep_mlp', label: 'Deep MLP' },
+    { id: 'lenet', label: 'LeNet' },
+    { id: 'resnet_lite', label: 'ResNet Lite' },
   ]
 
   return (
@@ -105,16 +108,20 @@ function ConfigTab({ onParamsChange, onPresetSelect }: {
       {/* Presets */}
       <div className="flex flex-col gap-2 shrink-0">
         <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#444' }}>Presets</span>
-        <div className="flex gap-2">
-          {PRESETS.map(p => (
-            <button
-              key={p.id}
-              onClick={() => onPresetSelect?.(p.id)}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:opacity-90"
-              style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
-            >
-              {p.label}
-            </button>
+        <div className="flex flex-col gap-1.5">
+          {[PRESETS.slice(0, 3), PRESETS.slice(3)].map((row, rowIdx) => (
+            <div key={rowIdx} className="flex gap-2">
+              {row.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => onPresetSelect?.(p.id)}
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:opacity-90"
+                  style={{ background: '#1c1c1e', border: '1px solid #2a2a2e', color: '#aaa' }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       </div>
