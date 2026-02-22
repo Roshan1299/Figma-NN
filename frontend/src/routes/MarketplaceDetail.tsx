@@ -93,11 +93,11 @@ export default function MarketplaceDetail() {
               </div>
               <h3 className="text-sm font-medium text-gray-400 tracking-wider">Architecture Preview</h3>
             </div>
-            <div className="flex-1 flex items-center justify-center p-6 bg-black/40">
+            <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-6 bg-black/40">
               <img
                 src={model.previewImage}
                 alt={`${model.name} architecture`}
-                className="max-w-full max-h-full object-contain rounded-lg"
+                className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg"
               />
             </div>
           </>
