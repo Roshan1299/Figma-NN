@@ -30,7 +30,6 @@ import { LeftSidebar } from '@/components/LeftSidebar'
 import { RightInspector } from '@/components/RightInspector'
 import { BottomDrawer } from '@/components/BottomDrawer'
 import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
-import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
 import { getPresetGraph, type PresetType } from '@/components/PresetChips'
@@ -772,11 +771,8 @@ export default function Playground() {
         onCancel={() => { void cancelActiveTraining() }}
         canCancel={canCancelTraining}
         isCancelling={isCancelling}
-      />
-
-      <ChatbotPanel
         onViewProposal={() => setShowProposalPreview(true)}
-        messages={messages}
+        chatMessages={messages}
         isStreaming={isStreaming}
         isGeneratingSchema={isGeneratingSchema}
         proposedSchema={proposedSchema}
