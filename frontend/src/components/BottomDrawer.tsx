@@ -397,7 +397,7 @@ export function BottomDrawer({
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 flex flex-col z-20 transition-all duration-200"
+      className="relative w-full shrink-0 flex flex-col z-20 transition-all duration-200"
       style={{
         height: collapsed ? 40 : 300,
         background: '#0a0a0a',

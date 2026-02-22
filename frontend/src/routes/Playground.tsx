@@ -85,7 +85,7 @@ import type { Hyperparams as HyperparamsType } from '@/components/HyperparamsPan
 
 function TrainBar({
   isTraining, canCancel, isCancelling, currentState, metrics, hyperparams,
-  onTrain, onCancel, drawerCollapsed, isDirty,
+  onTrain, onCancel, isDirty,
 }: {
   isTraining: boolean
   canCancel: boolean
@@ -95,7 +95,6 @@ function TrainBar({
   hyperparams: HyperparamsType
   onTrain: () => void
   onCancel: () => void
-  drawerCollapsed: boolean
   isDirty: boolean
 }) {
   const latestMetric = metrics.at(-1)
@@ -112,12 +111,10 @@ function TrainBar({
   const isDone = effectiveState === 'succeeded'
   const isFailed = effectiveState === 'failed'
 
-  const bottomOffset = drawerCollapsed ? 48 : 308
-
   return (
     <div
       className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
-      style={{ bottom: bottomOffset }}
+      style={{ bottom: 24 }}
     >
       <button
         onClick={canCancel ? onCancel : (!isDone && !isFailed ? onTrain : onTrain)}
@@ -564,7 +561,7 @@ export default function Playground() {
     loadGraph(presetGraph.layers, presetGraph.edges)
     broadcastOp({ op_type: 'load_graph', payload: { layers: presetGraph.layers, edges: presetGraph.edges } })
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
+      reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
     }
   }, [loadGraph, reactFlowInstance, broadcastOp])
 
@@ -585,7 +582,7 @@ export default function Playground() {
         clearImportedArchitecture();
         if (reactFlowInstance) {
           setTimeout(() => {
-             reactFlowInstance.fitView({ padding: 0.1, duration: 500 });
+             reactFlowInstance.fitView({ padding: 0.15, duration: 500 });
           }, 100);
         }
       } catch (e) {
@@ -597,10 +594,10 @@ export default function Playground() {
       loadGraph(blankPreset.layers, blankPreset.edges)
       if (reactFlowInstance) {
         reactFlowInstance.setViewport({ x: 120, y: 0, zoom: 0.85 }, { duration: 300 })
-        reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
+        reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
       }
     } else if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.05, duration: 300 })
+      reactFlowInstance.fitView({ padding: 0.15, duration: 300 })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reactFlowInstance]);
@@ -671,7 +668,7 @@ export default function Playground() {
 
       {/* Center Workspace */}
       <div className="flex-1 relative flex flex-col min-w-0">
-        <div className="h-full w-full" ref={reactFlowWrapper} onMouseMove={onMouseMoveOnCanvas}>
+        <div className="flex-1 w-full relative" ref={reactFlowWrapper} onMouseMove={onMouseMoveOnCanvas}>
           <ReactFlow
             nodes={reactFlowNodes}
             edges={reactFlowEdges}
@@ -724,21 +721,20 @@ export default function Playground() {
             <ConnectionPreview />
             <CollabCursors />
           </ReactFlow>
-        </div>
 
-        {/* Train Bar — floats above BottomDrawer */}
-        <TrainBar
-          isTraining={isTraining}
-          canCancel={canCancelTraining}
-          isCancelling={isCancelling}
-          currentState={currentState}
-          metrics={metrics}
-          hyperparams={hyperparams}
-          onTrain={handleRun}
-          onCancel={() => { void cancelActiveTraining() }}
-          drawerCollapsed={bottomCollapsed}
-          isDirty={isDirty}
-        />
+          {/* Train Bar — floats above the canvas locally */}
+          <TrainBar
+            isTraining={isTraining}
+            canCancel={canCancelTraining}
+            isCancelling={isCancelling}
+            currentState={currentState}
+            metrics={metrics}
+            hyperparams={hyperparams}
+            onTrain={handleRun}
+            onCancel={() => { void cancelActiveTraining() }}
+            isDirty={isDirty}
+          />
+        </div>
 
         <BottomDrawer
           collapsed={bottomCollapsed}
