@@ -1,5 +1,7 @@
 import copy
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import logging
 import queue
