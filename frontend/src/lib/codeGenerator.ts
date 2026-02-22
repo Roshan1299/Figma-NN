@@ -68,7 +68,7 @@ export function generatePyTorchCode(
     }
   }
 
-  const activationInit = (act: string, suffix: string): string | null => {
+  const activationInit = (act: string): string | null => {
     switch (act) {
       case 'relu':    return `nn.ReLU()`
       case 'sigmoid': return `nn.Sigmoid()`
@@ -93,7 +93,7 @@ export function generatePyTorchCode(
 
       const act = layer.params.activation
       if (act && act !== 'none') {
-        const actInit = activationInit(act, `${i}`)
+        const actInit = activationInit(act)
         if (actInit) {
           const actName = `${act}${i}`
           initLines.push(`        self.${actName} = ${actInit}`)
@@ -123,7 +123,7 @@ export function generatePyTorchCode(
 
       const act = activation
       if (act && act !== 'none') {
-        const actInit = activationInit(act, `${i}`)
+        const actInit = activationInit(act)
         if (actInit) {
           const actName = `${act}${i}`
           initLines.push(`        self.${actName} = ${actInit}`)
@@ -193,7 +193,6 @@ export function generatePyTorchCode(
       const s = shape as Extract<Shape, { type: 'image' }>
       const { filters, kernel } = layer.params
       const k = kernel ?? 3
-      const pad = Math.floor(k / 2)
       const i = cnt('resblock')
       const name = `resblock${i}`
       initLines.push(`        self.${name} = ResidualBlock(${s.channels}, ${filters}, kernel_size=${k})`)

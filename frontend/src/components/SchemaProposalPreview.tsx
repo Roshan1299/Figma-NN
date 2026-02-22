@@ -30,6 +30,8 @@ const layerTitles: Record<LayerKind, string> = {
   Pooling: 'Pooling Layer',
   Flatten: 'Flatten Layer',
   Dropout: 'Dropout Layer',
+  BatchNorm: 'Batch Norm Layer',
+  ResidualBlock: 'Residual Block Layer',
   Output: 'Output Layer',
 }
 
@@ -40,6 +42,8 @@ const headerColors: Record<LayerKind, string> = {
   Pooling: 'bg-teal-500',
   Flatten: 'bg-amber-500',
   Dropout: 'bg-rose-500',
+  BatchNorm: 'bg-purple-500',
+  ResidualBlock: 'bg-orange-500',
   Output: 'bg-emerald-500',
 }
 
@@ -142,6 +146,8 @@ const layerKindToNodeType: Record<LayerKind, keyof typeof nodeTypes> = {
   Pooling: 'proposal',
   Flatten: 'proposal',
   Dropout: 'proposal',
+  BatchNorm: 'proposal',
+  ResidualBlock: 'proposal',
   Output: 'proposal',
 }
 

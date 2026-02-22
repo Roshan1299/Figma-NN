@@ -18,14 +18,13 @@ export function CollabPresence() {
       {visible.map((user, index) => {
         const isLocal = user.userId === localUser.userId
         return (
-          <Identicon
-            key={user.userId}
-            name={user.name}
-            size={28}
-            title={user.name}
-            ring={isLocal}
-            style={{ zIndex: MAX_VISIBLE - index, position: 'relative' }}
-          />
+          <div key={user.userId} title={user.name} style={{ zIndex: MAX_VISIBLE - index, position: 'relative' }}>
+            <Identicon
+              name={user.name}
+              size={28}
+              ring={isLocal}
+            />
+          </div>
         )
       })}
       {overflow > 0 && (

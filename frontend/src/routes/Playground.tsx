@@ -30,13 +30,13 @@ import { LeftSidebar } from '@/components/LeftSidebar'
 import { RightInspector } from '@/components/RightInspector'
 import { BottomDrawer } from '@/components/BottomDrawer'
 import type { ActivationType, LayerKind, AnyLayer } from '@/types/graph'
-import { ChatbotPanel } from '@/components/ChatbotPanel'
 import { SchemaProposalPreview } from '@/components/SchemaProposalPreview'
 import { useChat } from '@/hooks/useChat'
 import { getPresetGraph, type PresetType } from '@/components/PresetChips'
 import { useCollaboration } from '@/hooks/useCollaboration'
 import { CollabCursors } from '@/components/CollabCursors'
 import { useMarketplaceStore } from '@/store/marketplaceStore'
+import type { LeftSidebarTab } from '@/components/LeftSidebar'
 import { getMarketplaceModel } from '@/api/marketplace'
 import { parseArchitectureToGraph } from '@/lib/architectureParser'
 import { ConnectionPreview } from '@/components/ConnectionPreview'
@@ -211,6 +211,7 @@ export default function Playground() {
   const [hyperparams, setHyperparams] = useState<Hyperparams>(DEFAULT_HYPERPARAMS)
   const [showProposalPreview, setShowProposalPreview] = useState(false)
   const [leftCollapsed, setLeftCollapsed] = useState(false)
+  const [activeLeftTab, setActiveLeftTab] = useState<LeftSidebarTab>('layers')
   const [rightCollapsed, setRightCollapsed] = useState(false)
   const [bottomCollapsed, setBottomCollapsed] = useState(false)
   // Track if anything changed since last training run (to reset the train button)
@@ -471,11 +472,19 @@ export default function Playground() {
       }
 
       const isMod = event.ctrlKey || event.metaKey
+      const isSave = (event.key === 's' || event.key === 'S') && isMod
       const isUndo = (event.key === 'z' || event.key === 'Z') && isMod && !event.shiftKey
       const isRedo = (event.key === 'z' || event.key === 'Z') && isMod && event.shiftKey
       const isCopy = (event.key === 'c' || event.key === 'C') && isMod
       const isPaste = (event.key === 'v' || event.key === 'V') && isMod
       const isDeleteKey = event.key === 'Delete' || event.key === 'Backspace'
+
+      if (isSave) {
+        event.preventDefault()
+        setLeftCollapsed(false)
+        setActiveLeftTab('history')
+        return
+      }
 
       if (isUndo) {
         event.preventDefault()
@@ -678,7 +687,7 @@ export default function Playground() {
 
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden bg-background">
-      <LeftSidebar collapsed={leftCollapsed} onToggleCollapse={() => setLeftCollapsed(v => !v)} />
+      <LeftSidebar collapsed={leftCollapsed} onToggleCollapse={() => setLeftCollapsed(v => !v)} activeTab={activeLeftTab} onTabChange={setActiveLeftTab} />
 
       {/* Center Workspace */}
       <div className="flex-1 relative flex flex-col min-w-0">
@@ -696,6 +705,7 @@ export default function Playground() {
             nodesDraggable={!isTraining}
             nodesConnectable={!isTraining}
             nodeTypes={nodeTypes}
+            deleteKeyCode={null}
             selectNodesOnDrag={false}
             multiSelectionKeyCode="shift"
             panOnDrag={true}
@@ -772,11 +782,8 @@ export default function Playground() {
         onCancel={() => { void cancelActiveTraining() }}
         canCancel={canCancelTraining}
         isCancelling={isCancelling}
-      />
-
-      <ChatbotPanel
         onViewProposal={() => setShowProposalPreview(true)}
-        messages={messages}
+        chatMessages={messages}
         isStreaming={isStreaming}
         isGeneratingSchema={isGeneratingSchema}
         proposedSchema={proposedSchema}

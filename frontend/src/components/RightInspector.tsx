@@ -3,10 +3,13 @@ import type { FC } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { MetricsCharts } from './MetricsCharts'
 import { SamplePredictionCard } from './SamplePredictionCard'
+import { NeuronPanel } from './NeuronPanel'
 import type { MetricData, EmnistSample } from '@/api/types'
 import { useGraphStore } from '@/store/graphStore'
 import { useModels, useModel } from '@/hooks/useModels'
 import type { AnyLayer, TensorShape } from '@/types/graph'
+import type { ChatMessage, ProposedSchema } from '@/hooks/useChat'
+import type { GraphEdge } from '@/types/graph'
 
 interface RightInspectorProps {
   selectedNodeId: string | null
@@ -21,9 +24,17 @@ interface RightInspectorProps {
   onCancel?: () => void
   canCancel?: boolean
   isCancelling?: boolean
+  // Neuron AI assistant
+  onViewProposal: () => void
+  chatMessages: ChatMessage[]
+  isStreaming: boolean
+  isGeneratingSchema: boolean
+  proposedSchema: ProposedSchema | null
+  sendMessage: (message: string, requestSchemaChange: boolean, currentSchema?: { layers: Record<string, AnyLayer>; edges: GraphEdge[] }) => void
+  clearMessages: () => void
 }
 
-type ActiveTab = 'props' | 'metrics' | 'model'
+type ActiveTab = 'props' | 'metrics' | 'model' | 'neuron'
 
 // ── Shared dark-style input primitives ───────────────────────────────────────
 
@@ -343,6 +354,9 @@ function CollapsedStrip({ onToggle, setTab, isTraining }: {
       <button onClick={() => { setTab('model'); onToggle() }} title="Model" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors" style={{ color: '#555' }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
       </button>
+      <button onClick={() => { setTab('neuron'); onToggle() }} title="Neuron" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors" style={{ color: '#555' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5"/><path d="M12 2a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5"/><path d="M5.5 17.5A4 4 0 0 1 4 14c0-1.5.8-2.8 2-3.5"/><path d="M18.5 17.5A4 4 0 0 0 20 14c0-1.5-.8-2.8-2-3.5"/><path d="M8 20a4 4 0 0 0 8 0"/></svg>
+      </button>
     </div>
   )
 }
@@ -525,6 +539,13 @@ export const RightInspector: FC<RightInspectorProps> = ({
   onCancel,
   canCancel = false,
   isCancelling = false,
+  onViewProposal,
+  chatMessages,
+  isStreaming,
+  isGeneratingSchema,
+  proposedSchema,
+  sendMessage,
+  clearMessages,
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('props')
   const [modelName, setModelName] = useState('')
@@ -632,6 +653,11 @@ export const RightInspector: FC<RightInspectorProps> = ({
       label: 'Model',
       icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
     },
+    {
+      id: 'neuron',
+      label: 'Neuron',
+      icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5"/><path d="M12 2a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5"/><path d="M5.5 17.5A4 4 0 0 1 4 14c0-1.5.8-2.8 2-3.5"/><path d="M18.5 17.5A4 4 0 0 0 20 14c0-1.5-.8-2.8-2-3.5"/><path d="M8 20a4 4 0 0 0 8 0"/></svg>,
+    },
   ]
 
   if (collapsed) {
@@ -639,7 +665,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
   }
 
   return (
-    <div className="w-[300px] h-full flex flex-col shrink-0 overflow-hidden" style={{ background: '#0a0a0a', borderLeft: '1px solid #1e1e1e' }}>
+    <div className="w-[340px] h-full flex flex-col shrink-0 overflow-hidden" style={{ background: '#0a0a0a', borderLeft: '1px solid #1e1e1e' }}>
       {/* Tab bar */}
       <div className="p-3 shrink-0">
         <div className="flex rounded-xl p-1 gap-0.5" style={{ background: '#161618' }}>
@@ -647,7 +673,8 @@ export const RightInspector: FC<RightInspectorProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg h-8 text-[12px] font-medium transition-all"
+              title={tab.label}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg h-8 text-[12px] font-medium transition-all min-w-0"
               style={
                 activeTab === tab.id
                   ? { background: '#252528', color: '#fff' }
@@ -655,9 +682,11 @@ export const RightInspector: FC<RightInspectorProps> = ({
               }
             >
               {tab.icon}
-              {tab.label}
+              {activeTab === tab.id && (
+                <span className="truncate">{tab.label}</span>
+              )}
               {tab.id === 'metrics' && isTraining && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
               )}
             </button>
           ))}
@@ -885,6 +914,21 @@ export const RightInspector: FC<RightInspectorProps> = ({
       {/* ── Model Tab ─────────────────────────────────────────────────────── */}
       {activeTab === 'model' && (
         <ModelTab savedModels={savedModels ?? []} isLoading={modelsLoading} />
+      )}
+
+      {/* ── Neuron Tab ────────────────────────────────────────────────────── */}
+      {activeTab === 'neuron' && (
+        <div className="flex-1 overflow-hidden">
+          <NeuronPanel
+            onViewProposal={onViewProposal}
+            messages={chatMessages}
+            isStreaming={isStreaming}
+            isGeneratingSchema={isGeneratingSchema}
+            proposedSchema={proposedSchema}
+            sendMessage={sendMessage}
+            clearMessages={clearMessages}
+          />
+        </div>
       )}
     </div>
   )
