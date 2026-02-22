@@ -354,6 +354,9 @@ function CollapsedStrip({ onToggle, setTab, isTraining }: {
       <button onClick={() => { setTab('model'); onToggle() }} title="Model" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors" style={{ color: '#555' }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
       </button>
+      <button onClick={() => { setTab('neuron'); onToggle() }} title="Neuron" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors" style={{ color: '#555' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5"/><path d="M12 2a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5"/><path d="M5.5 17.5A4 4 0 0 1 4 14c0-1.5.8-2.8 2-3.5"/><path d="M18.5 17.5A4 4 0 0 0 20 14c0-1.5-.8-2.8-2-3.5"/><path d="M8 20a4 4 0 0 0 8 0"/></svg>
+      </button>
     </div>
   )
 }
