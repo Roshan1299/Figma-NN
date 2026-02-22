@@ -146,7 +146,7 @@ function HeaderLeft() {
   const activeModelSource = useMarketplaceStore(s => s.activeModelSource)
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       <Link
         to="/playground"
         className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -171,14 +171,17 @@ function HeaderLeft() {
         <span className="font-semibold text-foreground text-sm tracking-wide">FigmaNN</span>
       </Link>
       {activeModelSource === 'marketplace' && activeModelName && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm text-muted-foreground font-medium relative">
-            {activeModelName}
-            <span className="absolute -top-2.5 -right-9 text-[9px] font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 rounded px-1 py-0.5 leading-none tracking-wide">
+        <>
+          <span className="text-border mx-1">/</span>
+          <div className="flex items-start">
+            <span className="text-sm text-foreground font-medium leading-none translate-y-[2px]">
+              {activeModelName}
+            </span>
+            <span className="text-[8px] font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 rounded px-1 py-0.5 leading-none tracking-wide ml-1.5 -translate-y-[4px]">
               IMPORTED
             </span>
-          </span>
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
