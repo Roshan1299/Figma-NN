@@ -1,10 +1,8 @@
 # Figma NN: Visual Neural Network Builder
 
-Built for Hacked 26.
+Figma NN is a browser-based tool for building, training, and sharing neural networks through a drag-and-drop canvas interface. Built for Hacked 26.
 
-Figma NN is a browser-based tool for building, training, and sharing neural networks through a drag-and-drop canvas interface. It targets people who understand machine learning conceptually but want to iterate on architectures without writing boilerplate code.
-
-The core idea: design a network visually, hit train, and get real results, then share it or export the PyTorch code.
+It targets people who understand machine learning conceptually but want to iterate on architectures without writing boilerplate code. Design a network visually, hit train, and get real results, then share it or export the PyTorch code.
 
 ---
 
@@ -45,7 +43,7 @@ Six built-in starting points across two rows:
 | Empty | Input -> Flatten -> Output |
 | Linear | Input -> Flatten -> Dense -> Output |
 | Deep CNN | Conv -> BN -> Pool -> Conv -> BN -> Pool -> Dense -> Dropout -> Output |
-| Deep MLP | Flatten -> Dense(256) -> BN -> Dropout -> Dense(128) -> BN -> Dropout -> Output |
+| Deep MLP | Input -> Flatten -> Dense(256) -> BN -> Dropout -> Dense(128) -> BN -> Dropout -> Output |
 | LeNet | Conv(6) -> Pool -> Conv(16) -> Pool -> Dense(120) -> Dense(84) -> Output |
 | ResNet Lite | Conv -> BN -> Pool -> ResBlock -> ResBlock -> Dense -> Dropout -> Output |
 
@@ -145,24 +143,24 @@ See [Setup.md](./Setup.md) for full installation and configuration instructions.
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/train` | Start a training run |
-| POST | `/api/train/{run_id}/cancel` | Cancel an active run |
-| GET | `/api/runs/{run_id}/events` | SSE stream for real-time metrics |
+| POST | `/api/train/:run_id/cancel` | Cancel an active run |
+| GET | `/api/runs/:run_id/events` | SSE stream for real-time metrics |
 | POST | `/api/infer` | Run inference on pixel input |
 | POST | `/api/models/save` | Save a trained model |
 | GET | `/api/models` | List saved models |
-| GET | `/api/models/{id}` | Model detail |
+| GET | `/api/models/:id` | Model detail |
 | POST | `/api/chat` | AI assistant (streaming) |
 | GET | `/api/marketplace/models` | List marketplace models |
 | POST | `/api/marketplace/models` | Publish a model |
-| GET | `/api/marketplace/models/{id}` | Marketplace model detail |
+| GET | `/api/marketplace/models/:id` | Marketplace model detail |
 | WS | `/socket.io` | Real-time collaboration |
 
 ---
 
 ## Known Limitations
 
-- Training run metadata is stored in memory and lost when the backend restarts. Model weight files on disk survive restarts, but cannot be re-associated without retraining.
-- Only one training run can be active at a time.
-- Collaboration uses a single shared room; all connected users see the same canvas. There are no separate project rooms.
-- The marketplace is anonymous; there are no user accounts.
-- Canvas state is not persisted to the server. Refreshing the page loads a blank canvas (unless arriving from a marketplace URL).
+- Training run metadata is held in memory. The backend restarting clears it, though trained weight files on disk are preserved.
+- One training run can be active at a time.
+- Collaboration uses a single shared canvas room. Separate project rooms are not yet supported.
+- The marketplace is anonymous. User accounts are not implemented.
+- Canvas state is session-only. Refreshing loads a blank canvas unless arriving via a marketplace import URL.
