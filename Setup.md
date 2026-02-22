@@ -51,19 +51,19 @@ This installs Flask, Flask-SocketIO, PyTorch, torchvision, and the AI provider S
 
 The AI assistant (Neuron) supports three providers. Set the relevant environment variable before starting the backend:
 
-**Option A — Anthropic Claude (default model: `claude-3-5-haiku-20241022`)**
+**Option A: Anthropic Claude (default model: `claude-3-5-haiku-20241022`)**
 ```bash
 export PROVIDER=anthropic
 export ANTHROPIC_API_KEY=your_key_here
 ```
 
-**Option B — OpenAI (default model: `gpt-4o`)**
+**Option B: OpenAI (default model: `gpt-4o`)**
 ```bash
 export PROVIDER=openai
 export OPENAI_API_KEY=your_key_here
 ```
 
-**Option C — Google Gemini (default model: `gemini-2.0-flash-lite`)**
+**Option C: Google Gemini (default model: `gemini-2.0-flash-lite`)**
 ```bash
 export PROVIDER=google
 export GOOGLE_API_KEY=your_key_here
@@ -115,9 +115,9 @@ Open `http://localhost:5173` in your browser.
 - Drag a layer from the left sidebar onto the canvas and confirm it appears.
 
 **Training**
-- Build a minimal architecture: Input → Flatten → Output
+- Build a minimal architecture: Input -> Flatten -> Output
 - Open the bottom drawer, go to the Config tab, set epochs to 1
-- Click Train — the progress bar should fill and charts should update in real time
+- Click Train; the progress bar should fill and charts should update in real time
 
 **Collaboration**
 - Open `http://localhost:5173` in a second browser tab
@@ -125,7 +125,7 @@ Open `http://localhost:5173` in your browser.
 
 **AI Assistant**
 - Click the Neuron tab in the right inspector panel
-- Send a message — if the provider is configured correctly, a response should stream back
+- Send a message; if the provider is configured correctly, a response should stream back
 
 ---
 
@@ -162,7 +162,7 @@ pip install -r backend/requirements.txt
 
 **Socket.IO connection fails in the browser**
 
-Confirm the backend is running on port 8080. The Vite proxy handles `/socket.io` automatically — no manual CORS configuration is needed when running through the dev server.
+Confirm the backend is running on port 8080. The Vite proxy handles `/socket.io` automatically; no manual CORS configuration is needed when running through the dev server.
 
 **Marketplace models not loading after backend restart**
 

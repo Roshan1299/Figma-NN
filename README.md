@@ -1,8 +1,10 @@
-# Figma NN — Visual Neural Network Builder
+# Figma NN: Visual Neural Network Builder
+
+Built for Hacked 26.
 
 Figma NN is a browser-based tool for building, training, and sharing neural networks through a drag-and-drop canvas interface. It targets people who understand machine learning conceptually but want to iterate on architectures without writing boilerplate code.
 
-The core idea: design a network visually, hit train, and get real results — then share it or export the PyTorch code.
+The core idea: design a network visually, hit train, and get real results, then share it or export the PyTorch code.
 
 ---
 
@@ -22,8 +24,8 @@ The core idea: design a network visually, hit train, and get real results — th
 | Dense | Units, activation |
 | Convolution | Filters, kernel, stride, padding, activation |
 | Pooling | Pool size, stride, padding |
-| Flatten | — |
-| Batch Normalization | — |
+| Flatten | - |
+| Batch Normalization | - |
 | Dropout | Rate |
 | Residual Block | Filters, kernel (with skip connection) |
 | Output | Classes, softmax |
@@ -33,22 +35,22 @@ The core idea: design a network visually, hit train, and get real results — th
 - Real-time loss and accuracy charts streamed via Server-Sent Events
 - Cancel mid-run
 - 8 sample predictions shown after training completes
-- Supports MNIST (digits 0–9) and EMNIST (letters A–Z)
+- Supports MNIST (digits 0-9) and EMNIST (letters A-Z)
 
 ### Architecture Presets
 Six built-in starting points across two rows:
 
 | Preset | Architecture |
 |---|---|
-| Empty | Input → Flatten → Output |
-| Linear | Input → Flatten → Dense → Output |
-| Deep CNN | Conv → BN → Pool → Conv → BN → Pool → Dense → Dropout → Output |
-| Deep MLP | Flatten → Dense(256) → BN → Dropout → Dense(128) → BN → Dropout → Output |
-| LeNet | Conv(6) → Pool → Conv(16) → Pool → Dense(120) → Dense(84) → Output |
-| ResNet Lite | Conv → BN → Pool → ResBlock → ResBlock → Dense → Dropout → Output |
+| Empty | Input -> Flatten -> Output |
+| Linear | Input -> Flatten -> Dense -> Output |
+| Deep CNN | Conv -> BN -> Pool -> Conv -> BN -> Pool -> Dense -> Dropout -> Output |
+| Deep MLP | Flatten -> Dense(256) -> BN -> Dropout -> Dense(128) -> BN -> Dropout -> Output |
+| LeNet | Conv(6) -> Pool -> Conv(16) -> Pool -> Dense(120) -> Dense(84) -> Output |
+| ResNet Lite | Conv -> BN -> Pool -> ResBlock -> ResBlock -> Dense -> Dropout -> Output |
 
 ### Test Page
-- 28×28 drawing canvas — draw a digit or letter with your mouse
+- 28x28 drawing canvas: draw a digit or letter with your mouse
 - Select any trained model and run inference
 - Predicted class and confidence displayed immediately
 
@@ -56,11 +58,11 @@ Six built-in starting points across two rows:
 - Git-style manual commits: name a snapshot and save it
 - Timeline view with mini architecture previews per version
 - Two-step restore (confirm before overwriting canvas)
-- Undo stack preserved — Ctrl+Z works after a restore
+- Undo stack preserved; Ctrl+Z works after a restore
 - Persisted to `localStorage`, survives page refresh
 - Ctrl+S opens the History tab directly
 
-### AI Assistant — Neuron
+### AI Assistant: Neuron
 - Chat interface in the right inspector panel
 - Can propose architecture changes in response to plain-English requests
 - Side-by-side diff view (current vs proposed) with color-coded changes before applying
@@ -89,18 +91,18 @@ Six built-in starting points across two rows:
 
 **Frontend**
 - React 18 + TypeScript + Vite
-- React Flow (`@xyflow/react`) — canvas and node graph
-- Zustand — state management (with `persist` middleware for localStorage)
-- TailwindCSS — styling
-- Recharts — training metric charts
-- Socket.IO client — real-time collaboration
-- React Query — data fetching
+- React Flow (`@xyflow/react`): canvas and node graph
+- Zustand: state management (with `persist` middleware for localStorage)
+- TailwindCSS: styling
+- Recharts: training metric charts
+- Socket.IO client: real-time collaboration
+- React Query: data fetching
 
 **Backend**
-- Flask — HTTP API
-- Flask-SocketIO — WebSocket collaboration
-- PyTorch + torchvision — model building and training
-- SQLite — marketplace model storage
+- Flask: HTTP API
+- Flask-SocketIO: WebSocket collaboration
+- PyTorch + torchvision: model building and training
+- SQLite: marketplace model storage
 
 ---
 
@@ -144,7 +146,7 @@ See [Setup.md](./Setup.md) for full installation and configuration instructions.
 |---|---|---|
 | POST | `/api/train` | Start a training run |
 | POST | `/api/train/{run_id}/cancel` | Cancel an active run |
-| GET | `/api/runs/{run_id}/events` | SSE stream — real-time metrics |
+| GET | `/api/runs/{run_id}/events` | SSE stream for real-time metrics |
 | POST | `/api/infer` | Run inference on pixel input |
 | POST | `/api/models/save` | Save a trained model |
 | GET | `/api/models` | List saved models |
@@ -161,6 +163,6 @@ See [Setup.md](./Setup.md) for full installation and configuration instructions.
 
 - Training run metadata is stored in memory and lost when the backend restarts. Model weight files on disk survive restarts, but cannot be re-associated without retraining.
 - Only one training run can be active at a time.
-- Collaboration uses a single shared room — all connected users see the same canvas. There are no separate project rooms.
+- Collaboration uses a single shared room; all connected users see the same canvas. There are no separate project rooms.
 - The marketplace is anonymous; there are no user accounts.
 - Canvas state is not persisted to the server. Refreshing the page loads a blank canvas (unless arriving from a marketplace URL).
