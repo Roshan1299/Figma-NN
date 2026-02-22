@@ -662,7 +662,7 @@ export const RightInspector: FC<RightInspectorProps> = ({
   }
 
   return (
-    <div className="w-[300px] h-full flex flex-col shrink-0 overflow-hidden" style={{ background: '#0a0a0a', borderLeft: '1px solid #1e1e1e' }}>
+    <div className="w-[340px] h-full flex flex-col shrink-0 overflow-hidden" style={{ background: '#0a0a0a', borderLeft: '1px solid #1e1e1e' }}>
       {/* Tab bar */}
       <div className="p-3 shrink-0">
         <div className="flex rounded-xl p-1 gap-0.5" style={{ background: '#161618' }}>
