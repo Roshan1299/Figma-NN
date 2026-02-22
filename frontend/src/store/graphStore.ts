@@ -130,6 +130,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   _pushUndo: () => {
     if (get()._skipUndo) return
     const { layers, edges, _undoStack } = get()
+    // Don't snapshot an empty canvas — undoing back to empty is never useful
+    // and causes the "undo wipes everything" bug on initial load
+    if (Object.keys(layers).length === 0 && edges.length === 0) return
     const snapshot: Snapshot = {
       layers: JSON.parse(JSON.stringify(layers)),
       edges: JSON.parse(JSON.stringify(edges)),
