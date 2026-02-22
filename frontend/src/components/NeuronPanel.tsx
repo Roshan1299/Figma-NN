@@ -59,10 +59,16 @@ export function NeuronPanel({
     return () => clearInterval(id)
   }, [isGeneratingSchema])
 
+  const isArchitectureRequest = (msg: string): boolean => {
+    const lower = msg.toLowerCase()
+    return /\b(add|remove|change|improve|modify|replace|make|use|insert|delete|update|restructure|deeper|wider|smaller|bigger|layer|architecture|model|network)\b/.test(lower)
+  }
+
   const handleSend = (text?: string) => {
     const msg = text ?? inputValue
     if (!msg.trim() || isStreaming) return
-    sendMessage(msg, true, { layers, edges })
+    const needsSchema = isArchitectureRequest(msg)
+    sendMessage(msg, needsSchema, needsSchema ? { layers, edges } : undefined)
     setInputValue('')
   }
 
