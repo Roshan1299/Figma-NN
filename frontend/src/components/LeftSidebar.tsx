@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import type { DragEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useVersionStore, type Version } from '@/store/versionStore'
-import { useGraphStore, graphToArchitecture } from '@/store/graphStore'
-import { ArchitecturePreview } from '@/components/ArchitecturePreview'
+import { useGraphStore } from '@/store/graphStore'
+import { GraphMiniPreview } from '@/components/GraphMiniPreview'
 
 // SVG icons per layer id
 const LAYER_ICONS: Record<string, (color: string) => React.ReactNode> = {
@@ -135,13 +135,6 @@ function HistoryPanel() {
     setRenamingId(null)
   }
 
-  const getArchitectureForPreview = (version: Version) => {
-    try {
-      return graphToArchitecture(version.snapshot.layers, version.snapshot.edges)
-    } catch {
-      return null
-    }
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -193,7 +186,6 @@ function HistoryPanel() {
               const isNewest = index === 0
               const isConfirming = confirmingRestoreId === version.id
               const isRenaming = renamingId === version.id
-              const arch = getArchitectureForPreview(version)
 
               return (
                 <div key={version.id} className="flex gap-2.5 group/card">
@@ -249,12 +241,18 @@ function HistoryPanel() {
                       </div>
                     </div>
 
-                    {/* Mini architecture preview */}
-                    {arch && (
-                      <div className="px-1 h-9 overflow-hidden">
-                        <ArchitecturePreview architecture={arch} />
-                      </div>
-                    )}
+                    {/* Mini canvas preview */}
+                    <div
+                      className="mx-2 mb-1 rounded-md overflow-hidden"
+                      style={{ background: '#0e0e0e', border: '1px solid #222' }}
+                    >
+                      <GraphMiniPreview
+                        layers={version.snapshot.layers}
+                        edges={version.snapshot.edges}
+                        width={204}
+                        height={72}
+                      />
+                    </div>
 
                     {/* Hover actions */}
                     <div className="px-3 pb-2 pt-1 flex items-center gap-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
