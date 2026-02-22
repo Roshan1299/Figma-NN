@@ -152,6 +152,7 @@ export function useChat(): UseChatReturn {
                   ])
                 }
               } catch (e) {
+                console.warn('Failed to parse SSE frame:', e)
               }
             }
           }
