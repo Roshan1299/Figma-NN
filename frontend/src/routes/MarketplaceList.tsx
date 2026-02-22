@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { listMarketplaceModels } from '../api/marketplace';
 import type { MarketplaceModelSummary } from '../types/marketplace';
 import { ArchitecturePreview } from '../components/ArchitecturePreview';
+import { Identicon } from '../components/Identicon';
 
 export default function MarketplaceList() {
   const [models, setModels] = useState<MarketplaceModelSummary[]>([]);
@@ -21,91 +22,127 @@ export default function MarketplaceList() {
         setLoading(false);
       }
     }
-
     fetchModels();
   }, []);
 
-  if (loading) return <div className="p-4">Loading marketplace...</div>;
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-3 opacity-40">
+          <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
+            <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm text-muted-foreground">Loading marketplace…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-red-400">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="p-6 max-w-5xl mx-auto pb-16">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Model Marketplace</h1>
+      <div className="p-6 max-w-6xl mx-auto pb-16">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Marketplace</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {models.length} {models.length === 1 ? 'model' : 'models'} published
+          </p>
         </div>
 
         {models.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground bg-card/30 backdrop-blur-md rounded-2xl border border-white/5">
-            <p className="text-lg">No models found in the marketplace.</p>
-            <p className="text-sm mt-2 opacity-80">Be the first to publish one!</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-white/5 bg-white/[0.03]">
+            <svg className="w-12 h-12 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p className="text-base font-medium text-white/40">No models yet</p>
+            <p className="text-sm text-white/25 mt-1">Be the first to publish one!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {models.map((model) => (
-              <Link
-                key={model.id}
-                to={`/marketplace/${model.id}`}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-transparent backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] hover:border-primary/50 hover:shadow-[0_8px_32px_0_rgba(139,92,246,0.2)] transition-all duration-300 relative overflow-hidden"
-              >
-                {/* Hover glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
-
-                {/* Architecture preview */}
-                <div className="h-36 border-b border-white/5 bg-black/40 flex items-center justify-center overflow-hidden rounded-t-2xl">
-                  {model.previewImage ? (
-                    <img
-                      src={model.previewImage}
-                      alt={`${model.name} architecture`}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <ArchitecturePreview architecture={model.architecture} />
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="flex flex-col p-5 flex-1">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h2 className="text-lg font-bold text-white group-hover:text-primary transition-colors leading-tight">
-                      {model.name}
-                    </h2>
-                    <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 shrink-0 mt-0.5">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2 leading-relaxed">
-                    {model.description}
-                  </p>
-
-                  {model.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {model.tags.map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[11px] rounded-md group-hover:border-primary/30 transition-colors">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="text-xs text-gray-500 flex items-center justify-between mt-auto pt-3 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-[10px] text-white font-bold opacity-80">
-                        {model.authorName.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="truncate max-w-[120px]">{model.authorName}</span>
-                    </div>
-                    <span className="whitespace-nowrap shrink-0 opacity-70">
-                      {new Date(model.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric'})}
-                    </span>
-                  </div>
-                </div>
-              </Link>
+              <ModelCard key={model.id} model={model} />
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function ModelCard({ model }: { model: MarketplaceModelSummary }) {
+  return (
+    <Link
+      to={`/marketplace/${model.id}`}
+      className="group relative flex flex-col rounded-xl overflow-hidden border border-white/8 bg-white/[0.04] hover:border-white/20 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+    >
+      {/* Image — fills most of the card */}
+      <div className="relative aspect-[4/3] bg-black/60 overflow-hidden">
+        {model.previewImage ? (
+          <img
+            src={model.previewImage}
+            alt={model.name}
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center px-3 py-4">
+            <ArchitecturePreview architecture={model.architecture} />
+          </div>
+        )}
+
+        {/* Hover overlay — slides up from bottom */}
+        <div className="absolute inset-0 flex flex-col justify-end translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+          <div
+            className="px-3 pt-6 pb-3 flex flex-col gap-2"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 70%, transparent)' }}
+          >
+            {model.description && (
+              <p className="text-[12px] text-white/75 leading-relaxed line-clamp-3">
+                {model.description}
+              </p>
+            )}
+
+            {model.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {model.tags.slice(0, 4).map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                    style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1.5">
+                <Identicon name={model.authorName} size={16} />
+                <span className="text-[11px] text-white/50 truncate max-w-[90px]">{model.authorName}</span>
+              </div>
+              <span className="text-[10px] text-white/35 shrink-0">
+                {new Date(model.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Title below image */}
+      <div className="px-3 py-2.5">
+        <p className="text-[13px] font-semibold text-white/90 leading-tight truncate group-hover:text-white transition-colors">
+          {model.name}
+        </p>
+      </div>
+    </Link>
   );
 }

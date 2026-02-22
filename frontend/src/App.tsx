@@ -48,17 +48,52 @@ function ShareDropdown() {
     const el = document.querySelector('.react-flow') as HTMLElement | null
     if (!el) return null
     try {
-      const dataUrl = await toPng(el, {
-        backgroundColor: '#0a0a0a',
-        pixelRatio: 1,
-        filter: (node) => {
-          // Exclude controls and minimap from screenshot
-          const cls = (node as HTMLElement).className ?? ''
-          if (typeof cls === 'string' && (cls.includes('react-flow__controls') || cls.includes('react-flow__minimap'))) return false
-          return true
-        },
+      // Compute bounding box of all visible nodes relative to the canvas element
+      const nodeEls = el.querySelectorAll('.react-flow__node')
+      const containerRect = el.getBoundingClientRect()
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      nodeEls.forEach((nodeEl) => {
+        const rect = (nodeEl as HTMLElement).getBoundingClientRect()
+        const relX = rect.left - containerRect.left
+        const relY = rect.top - containerRect.top
+        minX = Math.min(minX, relX)
+        minY = Math.min(minY, relY)
+        maxX = Math.max(maxX, relX + rect.width)
+        maxY = Math.max(maxY, relY + rect.height)
       })
-      return dataUrl
+
+      const filter = (node: HTMLElement) => {
+        const cls = node.className ?? ''
+        if (typeof cls === 'string' && (cls.includes('react-flow__controls') || cls.includes('react-flow__minimap'))) return false
+        return true
+      }
+
+      // No nodes — capture whatever is visible
+      if (minX === Infinity) {
+        return await toPng(el, { backgroundColor: '#0a0a0a', pixelRatio: 1.5, filter })
+      }
+
+      // Crop tightly around nodes with padding
+      const padding = 48
+      const cropX = Math.max(0, minX - padding)
+      const cropY = Math.max(0, minY - padding)
+      const cropW = Math.min(containerRect.width - cropX, maxX - minX + padding * 2)
+      const cropH = Math.min(containerRect.height - cropY, maxY - minY + padding * 2)
+
+      return await toPng(el, {
+        backgroundColor: '#0a0a0a',
+        pixelRatio: 2,
+        width: cropW,
+        height: cropH,
+        style: {
+          transform: `translate(-${cropX}px, -${cropY}px)`,
+          transformOrigin: 'top left',
+          width: `${containerRect.width}px`,
+          height: `${containerRect.height}px`,
+        },
+        filter,
+      })
     } catch {
       return null
     }
