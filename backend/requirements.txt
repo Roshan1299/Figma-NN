@@ -8,4 +8,4 @@ numpy==1.26.4
 Pillow
 openai
 anthropic
-google-generativeai
+google-genai

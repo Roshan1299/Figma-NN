@@ -126,17 +126,24 @@ def _stream_anthropic(messages, api_key):
 
 
 def _stream_google(messages, api_key):
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name=os.environ.get("GOOGLE_MODEL", "gemini-1.5-flash"),
-        system_instruction=next((m["content"] for m in messages if m["role"] == "system"), None),
-    )
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=api_key)
+    system = next((m["content"] for m in messages if m["role"] == "system"), None)
     user_msgs = [m for m in messages if m["role"] != "system"]
-    # Convert to Gemini format
-    gemini_msgs = [{"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]} for m in user_msgs]
-    response = model.generate_content(gemini_msgs, stream=True)
-    for chunk in response:
+    contents = [
+        types.Content(
+            role="user" if m["role"] == "user" else "model",
+            parts=[types.Part(text=m["content"])]
+        )
+        for m in user_msgs
+    ]
+    config = types.GenerateContentConfig(
+        system_instruction=system,
+        temperature=0.7,
+    )
+    model = os.environ.get("GOOGLE_MODEL", "gemini-2.0-flash-lite")
+    for chunk in client.models.generate_content_stream(model=model, contents=contents, config=config):
         if chunk.text:
             yield chunk.text
 
